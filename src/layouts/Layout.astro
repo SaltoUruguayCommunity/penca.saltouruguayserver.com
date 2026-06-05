@@ -1,23 +1,50 @@
+---
+import "../styles/global.css";
+import Toaster from "../components/ui/Toast.tsx";
+
+export interface Props {
+  title: string;
+}
+
+const { title } = Astro.props;
+---
+
 <!doctype html>
-<html lang="en">
-	<head>
-		<meta charset="UTF-8" />
-		<meta name="viewport" content="width=device-width" />
-		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-		<link rel="icon" href="/favicon.ico" />
-		<meta name="generator" content={Astro.generator} />
-		<title>Astro Basics</title>
-	</head>
-	<body>
-		<slot />
-	</body>
+<html lang="es" data-theme="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{title} — Penca Mundial 2026</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,400;0,600;0,700;0,800;0,900;1,800;1,900&family=Inter:wght@400;500;600;700&family=Teko:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body class="min-h-screen antialiased">
+    <slot />
+    <Toaster client:load />
+  </body>
 </html>
 
-<style>
-	html,
-	body {
-		margin: 0;
-		width: 100%;
-		height: 100%;
-	}
-</style>
+<script>
+  document.addEventListener("DOMContentLoaded", async () => {
+    const { format } = await import("date-fns");
+    const { es } = await import("date-fns/locale");
+    for (const el of document.querySelectorAll("[data-time]")) {
+      const utc = el.getAttribute("data-time");
+      if (!utc) continue;
+      const d = new Date(utc + (utc.endsWith("Z") ? "" : "Z"));
+      if (isNaN(d.getTime())) continue;
+      const fmt = el.getAttribute("data-format") ?? "short";
+      if (fmt === "full") {
+        el.textContent = format(d, "d 'de' MMMM 'a las' HH:mm", { locale: es });
+      } else {
+        el.textContent = format(d, "d MMM HH:mm", { locale: es });
+      }
+    }
+  });
+</script>

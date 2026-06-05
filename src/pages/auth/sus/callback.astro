@@ -1,0 +1,136 @@
+---
+export const prerender = false;
+---
+
+<!DOCTYPE html>
+<html lang="es" data-theme="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Conectado — Penca Mundial</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;900&family=Inter:wght@400;600&display=swap" rel="stylesheet" />
+    <style>
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      body {
+        background: #0f0f1a;
+        color: #fff;
+        font-family: 'Inter', sans-serif;
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .card {
+        text-align: center;
+        padding: 48px;
+      }
+      .logo {
+        font-family: 'Barlow Condensed', sans-serif;
+        font-weight: 900;
+        font-size: 28px;
+        letter-spacing: -0.02em;
+        margin-bottom: 24px;
+      }
+      .logo span { color: #8B5CF6; }
+      .spinner {
+        width: 32px;
+        height: 32px;
+        border: 3px solid rgba(139,92,246,0.2);
+        border-top-color: #8B5CF6;
+        border-radius: 50%;
+        animation: spin 0.7s linear infinite;
+        margin: 0 auto 20px;
+      }
+      @keyframes spin { to { transform: rotate(360deg); } }
+      .check {
+        width: 48px;
+        height: 48px;
+        border-radius: 50%;
+        background: rgba(34,197,94,0.15);
+        border: 2px solid rgba(34,197,94,0.3);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 20px;
+        font-size: 24px;
+      }
+      .error-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 50%;
+        background: rgba(239,68,68,0.15);
+        border: 2px solid rgba(239,68,68,0.3);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 20px;
+        font-size: 24px;
+      }
+      p {
+        color: #A1A1AA;
+        font-size: 14px;
+      }
+      .hidden { display: none; }
+    </style>
+  </head>
+  <body>
+    <div class="card" id="card">
+      <div class="spinner" id="loadingSpinner"></div>
+      <p id="statusText">Verificando sesión...</p>
+    </div>
+
+    <script>
+      const $spinner = document.getElementById("loadingSpinner");
+      const $status = document.getElementById("statusText");
+
+      setTimeout(async () => {
+        try {
+          const res = await fetch("/api/auth/session");
+          const session = await res.json();
+
+          if (session?.user) {
+            $spinner.outerHTML = '<div class="check">✓</div>';
+            $status.textContent = "¡Sesión iniciada!";
+
+            setTimeout(() => {
+              if (window.opener) {
+                window.opener.location.reload();
+                window.close();
+              } else {
+                location.href = "/";
+              }
+            }, 800);
+          } else {
+            $spinner.outerHTML = '<div class="error-icon">✕</div>';
+            $status.textContent = "No se pudo iniciar sesión";
+
+            setTimeout(() => {
+              if (window.opener) {
+                window.opener.dispatchEvent(
+                  new CustomEvent("SignInError", { detail: { error: "No se pudo iniciar sesión" } })
+                );
+                window.close();
+              } else {
+                location.href = "/";
+              }
+            }, 1200);
+          }
+        } catch {
+          $spinner.outerHTML = '<div class="error-icon">✕</div>';
+          $status.textContent = "Error de conexión";
+
+          setTimeout(() => {
+            if (window.opener) {
+              window.opener.dispatchEvent(
+                new CustomEvent("SignInError", { detail: { error: "Error de conexión" } })
+              );
+              window.close();
+            }
+          }, 1200);
+        }
+      }, 1000);
+    </script>
+  </body>
+</html>

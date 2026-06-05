@@ -1,0 +1,84 @@
+---
+export const prerender = false;
+---
+
+<!DOCTYPE html>
+<html lang="es" data-theme="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Conectando — Penca Mundial</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;900&family=Inter:wght@400;600&display=swap" rel="stylesheet" />
+    <style>
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      body {
+        background: #0f0f1a;
+        color: #fff;
+        font-family: 'Inter', sans-serif;
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .card {
+        text-align: center;
+        padding: 48px;
+      }
+      .logo {
+        font-family: 'Barlow Condensed', sans-serif;
+        font-weight: 900;
+        font-size: 28px;
+        letter-spacing: -0.02em;
+        margin-bottom: 24px;
+      }
+      .logo span { color: #8B5CF6; }
+      .spinner {
+        width: 32px;
+        height: 32px;
+        border: 3px solid rgba(139,92,246,0.2);
+        border-top-color: #8B5CF6;
+        border-radius: 50%;
+        animation: spin 0.7s linear infinite;
+        margin: 0 auto 20px;
+      }
+      @keyframes spin { to { transform: rotate(360deg); } }
+      p {
+        color: #A1A1AA;
+        font-size: 14px;
+        line-height: 1.5;
+      }
+      .badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 4px 12px;
+        border-radius: 999px;
+        font-size: 11px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        background: rgba(139,92,246,0.15);
+        color: #A78BFA;
+        margin-bottom: 20px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="card">
+      <div class="badge">⚽ SaltoUruguayServer</div>
+      <div class="logo">LA <span>PENCA</span></div>
+      <div class="spinner"></div>
+      <p>Conectando con SaltoUruguayServer...</p>
+    </div>
+
+    <script>
+      import { signIn } from "auth-astro/client";
+
+      setTimeout(() => {
+        signIn("saltouruguay", { callbackUrl: "/auth/sus/callback" });
+      }, 600);
+    </script>
+  </body>
+</html>

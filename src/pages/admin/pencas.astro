@@ -1,0 +1,17 @@
+---
+import { getSession } from "auth-astro/server";
+import Layout from "../../layouts/Layout.astro";
+import PencasAdmin from "../../components/pencas/admin/PencasAdmin.tsx";
+
+const session = await getSession(Astro.request);
+
+if (!session?.user?.is_admin) {
+  return Astro.redirect("/", 302);
+}
+---
+
+<Layout title="Admin — Penca Mundial 2026">
+  <div class="min-h-screen">
+    <PencasAdmin client:load session={session} />
+  </div>
+</Layout>

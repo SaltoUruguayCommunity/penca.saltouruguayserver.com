@@ -1,0 +1,220 @@
+import { and, eq, sql } from "drizzle-orm";
+import { client } from "../../db";
+import {
+  WcMatchesTable,
+  WcTeamsTable,
+  WcPredictionsTable,
+} from "../../db/schema";
+import {
+  fetchCompetitionMatches,
+  mapStage,
+  mapStatus,
+} from "./api-football-data";
+import { calcPoints } from "./scoring";
+import { rewardExactScore } from "./rewards";
+
+const STAGES = [
+  "group",
+  "round_of_16",
+  "quarter_final",
+  "semi_final",
+  "third_place",
+  "final",
+] as const;
+
+async function recalculateMatchPoints(matchId: number) {
+  const match = await client.query.WcMatchesTable.findFirst({
+    where: eq(WcMatchesTable.id, matchId),
+  });
+  if (!match || match.homeScore === null || match.awayScore === null) return;
+
+  const predictions = await client
+    .select()
+    .from(WcPredictionsTable)
+    .where(eq(WcPredictionsTable.matchId, matchId))
+    .all();
+
+  for (const pred of predictions) {
+    const points = calcPoints(
+      pred.homeScore,
+      pred.awayScore,
+      match.homeScore,
+      match.awayScore,
+    );
+
+    await client
+      .update(WcPredictionsTable)
+      .set({ points, updatedAt: sql`(current_timestamp)` })
+      .where(eq(WcPredictionsTable.id, pred.id))
+      .run();
+
+    if (points === 5) {
+      await rewardExactScore(pred.userId);
+    }
+  }
+}
+
+export async function syncScoresFromApi(): Promise<{ updated: number }> {
+  const [matchesRes, teams] = await Promise.all([
+    fetchCompetitionMatches("WC"),
+    client.select().from(WcTeamsTable).all(),
+  ]);
+
+  const teamByCode = new Map(teams.map((t) => [t.fifaCode, t.id]));
+  const apiFinished = matchesRes.matches.filter(
+    (m) => m.status === "FINISHED" && m.score.fullTime.home !== null && m.score.fullTime.away !== null,
+  );
+
+  let updated = 0;
+
+  for (const apiMatch of apiFinished) {
+    const homeTeamId = teamByCode.get(apiMatch.homeTeam.tla);
+    const awayTeamId = teamByCode.get(apiMatch.awayTeam.tla);
+    if (!homeTeamId || !awayTeamId) continue;
+
+    const dbMatch = await client
+      .select()
+      .from(WcMatchesTable)
+      .where(
+        and(
+          eq(WcMatchesTable.matchDate, apiMatch.utcDate),
+          eq(WcMatchesTable.homeTeamId, homeTeamId),
+          eq(WcMatchesTable.awayTeamId, awayTeamId),
+        ),
+      )
+      .get();
+
+    if (!dbMatch) continue;
+    if (dbMatch.homeScore === apiMatch.score.fullTime.home && dbMatch.awayScore === apiMatch.score.fullTime.away && dbMatch.status === "finished") continue;
+
+    await client
+      .update(WcMatchesTable)
+      .set({
+        homeScore: apiMatch.score.fullTime.home,
+        awayScore: apiMatch.score.fullTime.away,
+        status: "finished",
+        updatedAt: sql`(current_timestamp)`,
+      })
+      .where(eq(WcMatchesTable.id, dbMatch.id))
+      .run();
+
+    await recalculateMatchPoints(dbMatch.id);
+    updated++;
+  }
+
+  return { updated };
+}
+
+export async function autoImportNextStage(): Promise<{
+  imported: number;
+  stage: string | null;
+}> {
+  const stages = await client
+    .select({ stage: WcMatchesTable.stage })
+    .from(WcMatchesTable)
+    .groupBy(WcMatchesTable.stage)
+    .all();
+
+  const presentStages = new Set(stages.map((s) => s.stage));
+
+  for (let i = 0; i < STAGES.length - 1; i++) {
+    const current = STAGES[i];
+    const next = STAGES[i + 1];
+
+    if (!presentStages.has(current)) continue;
+    if (presentStages.has(next)) continue;
+
+    const total = await client
+      .select({ count: sql<number>`COUNT(*)` })
+      .from(WcMatchesTable)
+      .where(eq(WcMatchesTable.stage, current))
+      .get();
+
+    const finished = await client
+      .select({ count: sql<number>`COUNT(*)` })
+      .from(WcMatchesTable)
+      .where(
+        and(
+          eq(WcMatchesTable.stage, current),
+          eq(WcMatchesTable.status, "finished"),
+        ),
+      )
+      .get();
+
+    if (total && finished && total.count === finished.count) {
+      const apiStage = STAGE_TO_API[next];
+      if (!apiStage) continue;
+
+      const res = await fetchCompetitionMatches("WC", { stage: apiStage });
+      let imported = 0;
+
+      for (const match of res.matches) {
+        const homeTeamId = await client
+          .select({ id: WcTeamsTable.id })
+          .from(WcTeamsTable)
+          .where(eq(WcTeamsTable.fifaCode, match.homeTeam.tla))
+          .get();
+
+        const awayTeamId = await client
+          .select({ id: WcTeamsTable.id })
+          .from(WcTeamsTable)
+          .where(eq(WcTeamsTable.fifaCode, match.awayTeam.tla))
+          .get();
+
+        if (!homeTeamId || !awayTeamId) continue;
+
+        const existing = await client
+          .select()
+          .from(WcMatchesTable)
+          .where(
+            and(
+              eq(WcMatchesTable.homeTeamId, homeTeamId.id),
+              eq(WcMatchesTable.awayTeamId, awayTeamId.id),
+              eq(WcMatchesTable.matchDate, match.utcDate),
+            ),
+          )
+          .get();
+
+        if (!existing) {
+          await client
+            .insert(WcMatchesTable)
+            .values({
+              groupId: null,
+              homeTeamId: homeTeamId.id,
+              awayTeamId: awayTeamId.id,
+              matchDate: match.utcDate,
+              stage: mapStage(match.stage),
+              status: mapStatus(match.status),
+              homeScore: match.score.fullTime.home,
+              awayScore: match.score.fullTime.away,
+            })
+            .run();
+          imported++;
+        }
+      }
+
+      return { imported, stage: next };
+    }
+  }
+
+  return { imported: 0, stage: null };
+}
+
+const STAGE_TO_API: Record<string, string> = {
+  group: "GROUP_STAGE",
+  round_of_16: "ROUND_OF_16",
+  quarter_final: "QUARTER_FINALS",
+  semi_final: "SEMI_FINALS",
+  third_place: "THIRD_PLACE",
+  final: "FINAL",
+};
+
+export async function runFullSync(): Promise<{
+  scoresUpdated: number;
+  autoImported: number;
+  nextStage: string | null;
+}> {
+  const { updated: scoresUpdated } = await syncScoresFromApi();
+  const { imported: autoImported, stage: nextStage } = await autoImportNextStage();
+  return { scoresUpdated, autoImported, nextStage };
+}

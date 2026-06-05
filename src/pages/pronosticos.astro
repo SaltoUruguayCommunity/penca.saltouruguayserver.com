@@ -1,0 +1,34 @@
+---
+import { getSession } from "auth-astro/server";
+import Layout from "../layouts/Layout.astro";
+import PencasApp from "../components/pencas/PencasApp.tsx";
+
+const session = await getSession(Astro.request);
+---
+
+<Layout title="Pronosticos — Penca Mundial 2026">
+  <div class="min-h-screen">
+    <nav class="fixed top-0 left-0 right-0 z-50 bg-surface/80 backdrop-blur-lg border-b border-accent-border/30">
+      <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center h-16">
+        <a href="/" class="flex items-center gap-2 font-barlow font-black text-lg tracking-tight">
+          <span class="text-accent">⚽</span>
+          <span class="text-white">LA</span>
+          <span class="text-accent">PENCA</span>
+        </a>
+
+        <div class="ml-auto flex items-center gap-6">
+          <a href="/" class="text-xs font-semibold uppercase tracking-wider text-muted hover:text-white transition font-teko">
+            Inicio
+          </a>
+          <a href="/pronosticos" class="text-xs font-semibold uppercase tracking-wider text-accent transition font-teko">
+            Pronosticos
+          </a>
+        </div>
+      </div>
+    </nav>
+
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 pb-16">
+      <PencasApp client:load session={session} />
+    </div>
+  </div>
+</Layout>
