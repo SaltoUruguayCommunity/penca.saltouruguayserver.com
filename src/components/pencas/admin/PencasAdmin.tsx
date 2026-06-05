@@ -136,54 +136,56 @@ export default function PencasAdmin({ session }: Props) {
   return (
     <div class="max-w-6xl mx-auto px-4 sm:px-6 py-8">
       {/* Header */}
-      <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
-        <div>
-          <div class="flex items-center gap-3">
-            <div class="w-10 h-10 rounded-xl bg-accent-subtle border border-accent-border flex items-center justify-center">
-              <Trophy class="h-5 w-5 text-accent" />
-            </div>
-            <div>
-              <h1 class="font-barlow font-bold uppercase text-xl text-white">Admin Panel</h1>
-              <p class="text-muted text-xs uppercase tracking-wider">Penca Mundial 2026</p>
+      <div class="glass-card p-4 sm:p-6 mb-8 glow-violet">
+        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div>
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 rounded-xl bg-accent-subtle border border-accent-border flex items-center justify-center shadow-[0_0_15px_rgba(139,92,246,0.1)]">
+                <Trophy class="h-5 w-5 text-accent" />
+              </div>
+              <div>
+                <h1 class="font-barlow font-bold uppercase text-xl text-gradient">Admin Panel</h1>
+                <p class="text-muted text-xs uppercase tracking-wider">Penca Mundial 2026</p>
+              </div>
             </div>
           </div>
-        </div>
 
-        <div class="flex flex-wrap gap-3">
-          <button
-            onClick={async () => {
-              const res = await actions.pencas.admin.checkMatches();
-              if (res.data) setDiagnosis(res.data as typeof diagnosis);
-            }}
-            class="btn-secondary !py-2.5 !px-3 !text-xs"
-            title="Diagnóstico"
-          >
-            <Bug class="h-4 w-4" />
-          </button>
-          <button
-            onClick={handleSyncScores}
-            disabled={syncing}
-            class="btn-secondary !py-2.5 !px-4 !text-xs"
-          >
-            <CloudDownload class={`h-4 w-4 ${syncing ? "animate-bounce" : ""}`} />
-            {syncing ? "Sincronizando..." : "Sincronizar resultados"}
-          </button>
-          <button
-            onClick={handleFetch}
-            disabled={fetching}
-            class="btn-primary !py-2.5 !px-4 !text-xs"
-          >
-            <RefreshCw class={`h-4 w-4 ${fetching ? "animate-spin" : ""}`} />
-            {fetching ? "Importando..." : "Importar datos"}
-          </button>
+          <div class="flex flex-wrap gap-3">
+            <button
+              onClick={async () => {
+                const res = await actions.pencas.admin.checkMatches();
+                if (res.data) setDiagnosis(res.data as typeof diagnosis);
+              }}
+              class="btn-secondary !py-2.5 !px-3 !text-xs"
+              title="Diagnóstico"
+            >
+              <Bug class="h-4 w-4" />
+            </button>
+            <button
+              onClick={handleSyncScores}
+              disabled={syncing}
+              class="btn-secondary !py-2.5 !px-4 !text-xs"
+            >
+              <CloudDownload class={`h-4 w-4 ${syncing ? "animate-bounce" : ""}`} />
+              {syncing ? "Sincronizando..." : "Sincronizar resultados"}
+            </button>
+            <button
+              onClick={handleFetch}
+              disabled={fetching}
+              class="btn-primary !py-2.5 !px-4 !text-xs"
+            >
+              <RefreshCw class={`h-4 w-4 ${fetching ? "animate-spin" : ""}`} />
+              {fetching ? "Importando..." : "Importar datos"}
+            </button>
+          </div>
         </div>
       </div>
 
       {/* Message toast */}
       {message && (
-        <div class={`mb-6 px-5 py-3 rounded-lg text-sm font-medium ${message.type === "success"
-          ? "bg-green-accent/10 border border-green-accent/20 text-green-accent"
-          : "bg-red-500/10 border border-red-500/20 text-red-400"
+        <div class={`mb-6 px-5 py-3 rounded-lg text-sm font-medium backdrop-blur-md ${message.type === "success"
+          ? "bg-green-accent/10 border border-green-accent/20 text-green-accent shadow-[0_0_20px_rgba(34,197,94,0.1)]"
+          : "bg-red-500/10 border border-red-500/20 text-red-400 shadow-[0_0_20px_rgba(239,68,68,0.1)]"
           }`}>
           {message.text}
         </div>
@@ -224,7 +226,7 @@ export default function PencasAdmin({ session }: Props) {
 
       {/* Admin info */}
       {session?.user && (
-        <div class="glass-card p-4 mb-6 flex items-center gap-3">
+        <div class="glass-card p-4 mb-6 flex items-center gap-3 glow-violet">
           <img src={session.user.image ?? undefined} alt={session.user.name ?? "User avatar"} class="w-10 h-10 rounded-full object-cover" />
           <div>
             <p class="text-sm text-white font-semibold">{session.user.name}</p>
