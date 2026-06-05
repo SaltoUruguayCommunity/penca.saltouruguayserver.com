@@ -37,7 +37,7 @@ export default function LiveMatches() {
           <a
             key={m.id}
             href={`/matches/${m.id}`}
-            class="glass-card !bg-green-accent/5 border-green-accent/20 hover:border-green-accent/40 transition p-4 flex items-center justify-between group"
+            class="glass-card !bg-green-accent/5 border-green-accent/20 hover:border-green-accent/40 transition-all duration-300 p-4 flex items-center justify-between group hover:shadow-[0_0_25px_rgba(34,197,94,0.12)] hover:-translate-y-0.5"
           >
             <div class="flex items-center gap-3 flex-1 min-w-0">
               <span class="text-sm font-semibold text-white truncate">{m.homeTeam.name}</span>

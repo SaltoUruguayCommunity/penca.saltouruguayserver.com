@@ -11,60 +11,68 @@ if (session?.user) {
 
 <Layout title="Penca Mundial 2026">
   <!-- ===== NAV ===== -->
-  <nav class="fixed top-0 left-0 right-0 z-50 bg-surface/80 backdrop-blur-lg border-b border-accent-border/30">
+  <nav id="navbar" class="fixed top-0 left-0 right-0 z-50 bg-surface/80 backdrop-blur-xl border-b border-accent-border/30 transition-shadow duration-300">
     <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between h-16">
-      <a href="/" class="flex items-center gap-2 font-barlow font-black text-xl tracking-tight">
-        <span class="text-accent">⚽</span>
+      <a href="/" class="flex items-center gap-2 font-barlow font-black text-xl tracking-tight group">
+        <span class="text-accent transition-transform duration-300 group-hover:scale-110">⚽</span>
         <span class="text-white">LA</span>
         <span class="text-accent">PENCA</span>
       </a>
 
       <div class="hidden md:flex items-center gap-8">
-        <a href="#como-funciona" class="text-xs font-semibold uppercase tracking-[0.12em] text-muted hover:text-white transition font-teko">Como funciona</a>
-        <a href="#puntuacion" class="text-xs font-semibold uppercase tracking-[0.12em] text-muted hover:text-white transition font-teko">Puntuacion</a>
+        <a href="#como-funciona" class="relative text-xs font-semibold uppercase tracking-[0.12em] text-muted hover:text-white transition font-teko group">
+          Como funciona
+          <span class="absolute -bottom-1 left-0 w-0 h-[1.5px] bg-accent transition-all duration-300 group-hover:w-full"></span>
+        </a>
+        <a href="#puntuacion" class="relative text-xs font-semibold uppercase tracking-[0.12em] text-muted hover:text-white transition font-teko group">
+          Puntuacion
+          <span class="absolute -bottom-1 left-0 w-0 h-[1.5px] bg-accent transition-all duration-300 group-hover:w-full"></span>
+        </a>
       </div>
 
-      <button data-popup-login class="btn-primary !py-2 !px-4 !text-xs cursor-pointer">Ingresar</button>
+      <button data-popup-login class="btn-primary !py-2 !px-4 !text-xs cursor-pointer hover:scale-105 active:scale-95 transition-transform">Ingresar</button>
     </div>
   </nav>
 
   <!-- ===== HERO ===== -->
   <section class="relative min-h-screen flex items-center overflow-hidden pt-16">
     <div class="absolute inset-0 overflow-hidden pointer-events-none">
-      <div class="bokeh-dot w-[500px] h-[500px] bg-accent/10 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" />
+      <div class="bokeh-dot w-[600px] h-[600px] bg-accent/10 top-1/4 left-1/3 -translate-x-1/2 -translate-y-1/2" />
+      <div class="bokeh-dot w-[400px] h-[400px] bg-gold/5 bottom-1/4 right-1/4 translate-x-1/2 translate-y-1/2" />
+      <div class="absolute inset-0" style="background: repeating-linear-gradient(0deg, transparent, transparent 1px, rgba(255,255,255,0.015) 1px, rgba(255,255,255,0.015) 2px), repeating-linear-gradient(90deg, transparent, transparent 1px, rgba(255,255,255,0.015) 1px, rgba(255,255,255,0.015) 2px);"></div>
     </div>
 
     <div class="relative max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-20 w-full">
       <div class="flex flex-col lg:flex-row items-center gap-12 lg:gap-16">
         <div class="flex-1 text-center lg:text-left">
-          <div class="inline-flex items-center gap-2 badge-pill mb-5">
+          <div class="inline-flex items-center gap-2 badge-pill mb-5 animate-fade-in-up">
             <span class="w-1.5 h-1.5 rounded-full bg-green-accent animate-pulse" />
             de <span class="text-white/80">SaltoUruguayServer</span>
           </div>
 
           <h1 class="font-barlow font-black italic uppercase leading-[0.85]">
-            <span class="text-[clamp(2.5rem,8vw,6rem)] block text-white">PRONOSTICA</span>
-            <span class="text-[clamp(2rem,7vw,5rem)] block text-accent">CADA PARTIDO</span>
-            <span class="text-[clamp(2rem,7vw,5rem)] block text-white">DEL MUNDIAL</span>
+            <span class="text-[clamp(2.5rem,8vw,6rem)] block text-white animate-fade-in-up-delay-1">PRONOSTICA</span>
+            <span class="text-[clamp(2rem,7vw,5rem)] block bg-gradient-to-r from-accent to-gold bg-clip-text text-transparent animate-fade-in-up-delay-2">CADA PARTIDO</span>
+            <span class="text-[clamp(2rem,7vw,5rem)] block text-white animate-fade-in-up-delay-3">DEL MUNDIAL</span>
           </h1>
 
-          <p class="mt-5 text-muted text-base max-w-lg mx-auto lg:mx-0 leading-relaxed">
+          <p class="mt-5 text-muted text-base max-w-lg mx-auto lg:mx-0 leading-relaxed animate-fade-in-up-delay-3">
             Competi contra otros hinchas, acumula puntos y subi en el ranking.
             Demostra quien sabe mas de futbol.
           </p>
 
-          <div class="mt-8 flex flex-wrap gap-4 justify-center lg:justify-start">
-            <a href="/pronosticos" class="btn-primary">
+          <div class="mt-8 flex flex-wrap gap-4 justify-center lg:justify-start animate-fade-in-up-delay-3">
+            <a href="/pronosticos" class="btn-primary hover:scale-105 active:scale-95 transition-transform">
               Empezar ahora
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
             </a>
-            <button data-popup-login class="btn-secondary cursor-pointer">Ingresar</button>
+            <button data-popup-login class="btn-secondary cursor-pointer hover:scale-105 active:scale-95 transition-transform">Ingresar</button>
           </div>
         </div>
 
-        <div class="shrink-0 flex flex-col items-center gap-4">
+        <div class="shrink-0 flex flex-col items-center gap-4 animate-fade-in-up-delay-3">
           <div class="relative">
-            <div class="text-[100px] sm:text-[140px] leading-none drop-shadow-[0_0_40px_rgba(250,204,21,0.25)]">
+            <div class="text-[100px] sm:text-[140px] leading-none drop-shadow-[0_0_40px_rgba(250,204,21,0.25)] animate-float">
               🏆
             </div>
             <div class="absolute -bottom-4 left-1/2 -translate-x-1/2 w-32 h-32 bg-gold/15 rounded-full blur-[50px]" />
@@ -72,11 +80,11 @@ if (session?.user) {
 
           <div class="flex gap-8">
             <div class="text-center">
-              <div class="font-barlow font-black text-2xl text-gold">32</div>
+              <div class="font-barlow font-black text-2xl text-gold">48</div>
               <div class="text-xs uppercase tracking-[0.12em] text-muted mt-0.5">Selecciones</div>
             </div>
             <div class="text-center">
-              <div class="font-barlow font-black text-2xl text-gold">64</div>
+              <div class="font-barlow font-black text-2xl text-gold">104</div>
               <div class="text-xs uppercase tracking-[0.12em] text-muted mt-0.5">Partidos</div>
             </div>
             <div class="text-center">
@@ -92,7 +100,7 @@ if (session?.user) {
   <!-- ===== HOW IT WORKS ===== -->
   <section id="como-funciona" class="py-20">
     <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-      <h2 class="font-barlow font-bold uppercase text-[clamp(1.5rem,4vw,2.25rem)] text-white text-center mb-12">
+      <h2 class="font-barlow font-bold uppercase text-[clamp(1.5rem,4vw,2.25rem)] text-white text-center mb-12 scroll-reveal">
         Como funciona
       </h2>
 
@@ -101,13 +109,16 @@ if (session?.user) {
           { icon: "🎯", title: "Elegi tus pronosticos", desc: "Antes de cada partido, ingresa el resultado que crees. Tienes hasta el pitido inicial." },
           { icon: "📊", title: "Segui los resultados", desc: "Los puntajes se actualizan solos cuando termina cada partido. Cada acierto suma." },
           { icon: "🏆", title: "Subi en el ranking", desc: "Competi contra todos los hinchas. Mientras mas aciertos, mas alto subis." },
-        ].map(({ icon, title, desc }) => (
-          <div class="glass-card p-6 text-center group hover:border-accent/40 transition duration-300">
-            <div class="w-14 h-14 mx-auto mb-4 rounded-xl border border-accent bg-accent-subtle flex items-center justify-center text-2xl group-hover:border-accent/60 group-hover:shadow-[0_0_20px_rgba(139,92,246,0.15)] transition-all duration-300">
-              {icon}
+        ].map((item, i) => (
+          <div
+            class="glass-card p-6 text-center group hover:border-accent/40 transition-all duration-500 hover:shadow-[0_0_30px_rgba(139,92,246,0.12)] hover:-translate-y-0.5 scroll-reveal"
+            style={`transition-delay: ${i * 150}ms`}
+          >
+            <div class="w-14 h-14 mx-auto mb-4 rounded-xl border border-accent bg-accent-subtle flex items-center justify-center text-2xl group-hover:border-accent/60 group-hover:shadow-[0_0_20px_rgba(139,92,246,0.15)] transition-all duration-300 group-hover:scale-110 group-hover:-rotate-3">
+              {item.icon}
             </div>
-            <h3 class="font-barlow font-bold uppercase text-base text-white mb-2">{title}</h3>
-            <p class="text-muted text-sm leading-relaxed">{desc}</p>
+            <h3 class="font-barlow font-bold uppercase text-base text-white mb-2">{item.title}</h3>
+            <p class="text-muted text-sm leading-relaxed">{item.desc}</p>
           </div>
         ))}
       </div>
@@ -117,13 +128,13 @@ if (session?.user) {
   <!-- ===== SCORING ===== -->
   <section id="puntuacion" class="pb-20">
     <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
-      <h2 class="font-barlow font-bold uppercase text-[clamp(1.5rem,4vw,2.25rem)] text-white text-center mb-8">
+      <h2 class="font-barlow font-bold uppercase text-[clamp(1.5rem,4vw,2.25rem)] text-white text-center mb-8 scroll-reveal">
         Puntuacion
       </h2>
 
-      <div class="glass-card p-6 sm:p-8">
+      <div class="glass-card p-6 sm:p-8 scroll-reveal">
         <div class="flex flex-col sm:flex-row gap-4 sm:gap-6">
-          <div class="flex-1 flex items-center gap-4 p-4 rounded-lg bg-green-accent/5 border border-green-accent/15">
+          <div class="flex-1 flex items-center gap-4 p-4 rounded-lg bg-green-accent/5 border border-green-accent/15 transition-all duration-300 hover:shadow-[0_0_25px_rgba(34,197,94,0.1)] hover:border-green-accent/30 hover:-translate-y-0.5">
             <div class="w-12 h-12 rounded-full bg-green-accent/10 border-2 border-green-accent/30 flex items-center justify-center shrink-0">
               <span class="font-barlow font-black text-xl text-green-accent">5</span>
             </div>
@@ -132,7 +143,7 @@ if (session?.user) {
               <p class="text-muted text-xs">Marcador exacto</p>
             </div>
           </div>
-          <div class="flex-1 flex items-center gap-4 p-4 rounded-lg bg-accent/5 border border-accent/15">
+          <div class="flex-1 flex items-center gap-4 p-4 rounded-lg bg-accent/5 border border-accent/15 transition-all duration-300 hover:shadow-[0_0_25px_rgba(139,92,246,0.12)] hover:border-accent/30 hover:-translate-y-0.5">
             <div class="w-12 h-12 rounded-full bg-accent/10 border-2 border-accent/30 flex items-center justify-center shrink-0">
               <span class="font-barlow font-black text-xl text-accent">2</span>
             </div>
@@ -141,7 +152,7 @@ if (session?.user) {
               <p class="text-muted text-xs">Ganador correcto</p>
             </div>
           </div>
-          <div class="flex-1 flex items-center gap-4 p-4 rounded-lg bg-zinc-800/30 border border-zinc-700/30">
+          <div class="flex-1 flex items-center gap-4 p-4 rounded-lg bg-zinc-800/30 border border-zinc-700/30 transition-all duration-300 hover:-translate-y-0.5">
             <div class="w-12 h-12 rounded-full bg-zinc-800 border border-zinc-700 flex items-center justify-center shrink-0">
               <span class="font-barlow font-black text-xl text-zinc-500">0</span>
             </div>
@@ -161,8 +172,10 @@ if (session?.user) {
   <!-- ===== CTA ===== -->
   <section class="pb-20">
     <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div class="rounded-2xl bg-gradient-to-br from-accent-deep via-accent to-accent-deep p-10 sm:p-14 text-center relative overflow-hidden">
-        <div class="absolute -top-8 -right-8 text-white/5 text-[120px] font-barlow font-black italic leading-none select-none">★</div>
+      <div class="rounded-2xl bg-gradient-to-br from-accent-deep via-accent to-accent-deep p-10 sm:p-14 text-center relative overflow-hidden animate-gradient-shift">
+        <div class="absolute -top-8 -right-8 text-white/5 text-[120px] font-barlow font-black italic leading-none select-none animate-float" style="animation-duration: 4s;">★</div>
+        <div class="absolute -bottom-8 -left-8 text-white/5 text-[80px] font-barlow font-black italic leading-none select-none animate-float" style="animation-duration: 5s; animation-delay: -1s;">⚽</div>
+        <div class="bokeh-dot w-[300px] h-[300px] bg-white/5 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" />
         <div class="relative">
           <div class="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.15em] text-white/60 mb-4">
             <span class="w-1.5 h-1.5 rounded-full bg-gold animate-pulse" />
@@ -175,12 +188,11 @@ if (session?.user) {
             Cada partido es una oportunidad para sumar puntos. No te quedes afuera.
           </p>
           <div class="flex flex-wrap gap-3 justify-center">
-            <a href="/pronosticos" class="btn-primary !bg-white !text-accent-deep hover:!bg-white/90">
-              Empezar a pronosticar
+            <a href="/pronosticos" class="btn-primary !bg-white !text-accent-deep hover:!bg-white/90 hover:scale-105 active:scale-95 transition-transform relative overflow-hidden group">
+              <span class="absolute inset-0 bg-linear-to-r from-transparent via-white/30 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700"></span>
+              <span class="relative">Empezar a pronosticar</span>
             </a>
-            <button data-popup-login class="inline-flex items-center gap-2 px-5 py-3 border border-white/30 rounded-md text-white font-barlow font-bold uppercase text-sm hover:bg-white/10 transition cursor-pointer">
-              Ingresar
-            </button>
+            <button data-popup-login class="inline-flex items-center gap-2 px-5 py-3 border border-white/30 rounded-md text-white font-barlow font-bold uppercase text-sm hover:bg-white/10 transition cursor-pointer hover:scale-105 active:scale-95">Ingresar</button>
           </div>
         </div>
       </div>
@@ -188,30 +200,91 @@ if (session?.user) {
   </section>
 
   <!-- ===== FOOTER ===== -->
-  <footer class="border-t border-accent-border/20 py-12">
-    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div class="flex flex-col sm:flex-row items-center justify-between gap-6">
-        <a href="/" class="flex items-center gap-2 font-barlow font-black text-lg">
-          <span class="text-accent">⚽</span>
-          <span class="text-white">LA</span>
-          <span class="text-accent">PENCA</span>
-        </a>
-        <div class="flex items-center gap-6">
-          <a href="#como-funciona" class="text-muted text-xs hover:text-accent transition uppercase tracking-wider font-semibold font-teko">Como funciona</a>
-          <a href="#puntuacion" class="text-muted text-xs hover:text-accent transition uppercase tracking-wider font-semibold font-teko">Puntuacion</a>
-          <a href="https://saltouruguayserver.com" class="text-muted text-xs hover:text-accent transition uppercase tracking-wider font-semibold font-teko">SaltoUruguayServer</a>
+  <footer class="relative mt-auto border-t border-white/10 bg-[#050505] pt-16 pb-8 overflow-hidden">
+    <!-- Ambient Background -->
+    <div class="absolute inset-0 opacity-[0.02] pointer-events-none" style="background-image: url('data:image/svg+xml,%3Csvg width=\'40\' height=\'40\' viewBox=\'0 0 40 40\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cpath d=\'M0 0h40v40H0z\' fill=\'none\' stroke=\'%23fff\' stroke-width=\'0.5\'/%3E%3C/svg%3E');"></div>
+    <div class="absolute bottom-0 left-1/2 -translate-x-1/2 w-[800px] h-[300px] rounded-full pointer-events-none" style="background: rgba(139,92,246,0.06); filter: blur(100px);"></div>
+
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+      <!-- TOP SECTION -->
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10 mb-12">
+        <!-- Branding -->
+        <div class="space-y-4">
+          <a href="/" class="flex items-center gap-3 group w-max">
+            <span class="text-2xl opacity-80 group-hover:opacity-100 group-hover:scale-110 transition-all duration-300">⚽</span>
+            <div class="flex flex-col">
+              <span class="font-barlow font-black text-xl text-white tracking-wide leading-none">LA PENCA</span>
+              <span class="font-mono text-[10px] text-white/40 tracking-[0.2em] uppercase group-hover:text-accent transition-colors">Mundial 2026</span>
+            </div>
+          </a>
+          <p class="text-white/50 text-sm leading-relaxed max-w-xs">
+            Pronosticá los partidos del Mundial 2026, acumulá puntos y competí contra otros hinchas en el ranking.
+          </p>
         </div>
-        <div class="flex gap-3">
-          <a href="https://saltouruguayserver.com" class="w-9 h-9 rounded-lg border border-accent-border/20 flex items-center justify-center text-muted hover:text-accent hover:border-accent/40 transition" title="SaltoUruguayServer">
-            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.477 2 2 6.477 2 12c0 4.991 3.657 9.128 8.438 9.879v-6.99h-2.54V12h2.54V9.797c0-2.506 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.46h-1.26c-1.243 0-1.63.771-1.63 1.562V12h2.773l-.443 2.89h-2.33v6.99C18.343 21.128 22 16.991 22 12c0-5.523-4.477-10-10-10z"/></svg>
-          </a>
-          <a href="https://saltouruguayserver.com/discord" class="w-9 h-9 rounded-lg border border-accent-border/20 flex items-center justify-center text-muted hover:text-accent hover:border-accent/40 transition" title="Discord">
-            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M20.317 4.3698a19.7913 19.7913 0 00-4.8851-1.5152.0741.0741 0 00-.0785.0371c-.211.3753-.4447.8648-.6083 1.2495-1.8447-.2762-3.68-.2762-5.4868 0-.1636-.3933-.4058-.8742-.6177-1.2495a.077.077 0 00-.0785-.037 19.7363 19.7363 0 00-4.8852 1.515.0699.0699 0 00-.0321.0277C.5334 9.0458-.319 13.5799.0992 18.0578a.0824.0824 0 00.0312.0561c2.0528 1.5076 4.0413 2.4228 5.9929 3.0294a.0777.0777 0 00.0842-.0276c.4616-.6304.8731-1.2952 1.226-1.9942a.076.076 0 00-.0416-.1057c-.6528-.2476-1.2743-.5495-1.8722-.8923a.077.077 0 01-.0076-.1277c.1258-.0943.2517-.1923.3718-.2914a.0743.0743 0 01.0776-.0105c3.9278 1.7933 8.18 1.7933 12.0614 0a.0739.0739 0 01.0785.0095c.1202.099.246.1981.3728.2924a.077.077 0 01-.0066.1276 12.2986 12.2986 0 01-1.873.8914.0766.0766 0 00-.0407.1067c.3604.698.7719 1.3628 1.225 1.9932a.076.076 0 00.0842.0286c1.961-.6067 3.9495-1.5219 6.0023-3.0294a.077.077 0 00.0313-.0552c.5004-5.177-.8382-9.6739-3.5485-13.6604a.061.061 0 00-.0312-.0286zM8.02 15.3312c-1.1825 0-2.1569-1.0857-2.1569-2.419 0-1.3332.9555-2.4189 2.157-2.4189 1.2108 0 2.1757 1.0952 2.1568 2.419 0 1.3332-.9555 2.4189-2.1569 2.4189zm7.9748 0c-1.1825 0-2.1569-1.0857-2.1569-2.419 0-1.3332.9554-2.4189 2.1569-2.4189 1.2108 0 2.1757 1.0952 2.1568 2.419 0 1.3332-.946 2.4189-2.1568 2.4189z"/></svg>
-          </a>
+
+        <!-- Links -->
+        <div>
+          <h3 class="font-bold text-white uppercase tracking-widest text-xs mb-4 flex items-center gap-2">
+            <span class="w-2 h-2 rounded-full bg-accent"></span> Navegación
+          </h3>
+          <ul class="space-y-2">
+            <li><a href="/" class="text-white/60 hover:text-white hover:translate-x-1 transition-all duration-200 text-sm inline-block">Inicio</a></li>
+            <li><a href="/pronosticos" class="text-white/60 hover:text-white hover:translate-x-1 transition-all duration-200 text-sm inline-block">Pronosticos</a></li>
+            <li><a href="#como-funciona" class="text-white/60 hover:text-white hover:translate-x-1 transition-all duration-200 text-sm inline-block">Como funciona</a></li>
+            <li><a href="#puntuacion" class="text-white/60 hover:text-white hover:translate-x-1 transition-all duration-200 text-sm inline-block">Puntuacion</a></li>
+          </ul>
+        </div>
+
+        <!-- SUS -->
+        <div>
+          <h3 class="font-bold text-white uppercase tracking-widest text-xs mb-4 flex items-center gap-2">
+            <span class="w-2 h-2 rounded-full bg-accent"></span> SaltoUruguayServer
+          </h3>
+          <ul class="space-y-2">
+            <li><a href="https://saltouruguayserver.com" target="_blank" rel="noopener noreferrer" class="text-white/60 hover:text-white hover:translate-x-1 transition-all duration-200 text-sm inline-block">Web Oficial</a></li>
+            <li><a href="https://saltouruguayserver.com/terminos" target="_blank" rel="noopener noreferrer" class="text-white/60 hover:text-white hover:translate-x-1 transition-all duration-200 text-sm inline-block">Términos</a></li>
+            <li><a href="https://saltouruguayserver.com/privacidad" target="_blank" rel="noopener noreferrer" class="text-white/60 hover:text-white hover:translate-x-1 transition-all duration-200 text-sm inline-block">Privacidad</a></li>
+          </ul>
+        </div>
+
+        <!-- Social -->
+        <div>
+          <h3 class="font-bold text-white uppercase tracking-widest text-xs mb-4 flex items-center gap-2">
+            <span class="w-2 h-2 rounded-full bg-accent"></span> Seguinos
+          </h3>
+          <div class="flex flex-wrap gap-3">
+            <a href="https://instagram.com/saltouruguayserver" target="_blank" rel="noopener noreferrer" aria-label="Instagram" class="group flex items-center justify-center size-10 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 hover:border-white/20 hover:scale-110 transition-all duration-300 hover:shadow-[0_0_15px_rgba(139,92,246,0.2)]">
+              <svg class="w-5 h-5 text-white/70 group-hover:text-white transition-colors" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/></svg>
+            </a>
+            <a href="https://discord.gg/XwHSRRwnzS" target="_blank" rel="noopener noreferrer" aria-label="Discord" class="group flex items-center justify-center size-10 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 hover:border-white/20 hover:scale-110 transition-all duration-300 hover:shadow-[0_0_15px_rgba(139,92,246,0.2)]">
+              <svg class="w-5 h-5 text-white/70 group-hover:text-white transition-colors" fill="currentColor" viewBox="0 0 24 24"><path d="M20.317 4.3698a19.7913 19.7913 0 00-4.8851-1.5152.0741.0741 0 00-.0785.0371c-.211.3753-.4447.8648-.6083 1.2495-1.8447-.2762-3.68-.2762-5.4868 0-.1636-.3933-.4058-.8742-.6177-1.2495a.077.077 0 00-.0785-.037 19.7363 19.7363 0 00-4.8852 1.515.0699.0699 0 00-.0321.0277C.5334 9.0458-.319 13.5799.0992 18.0578a.0824.0824 0 00.0312.0561c2.0528 1.5076 4.0413 2.4228 5.9929 3.0294a.0777.0777 0 00.0842-.0276c.4616-.6304.8731-1.2952 1.226-1.9942a.076.076 0 00-.0416-.1057c-.6528-.2476-1.2743-.5495-1.8722-.8923a.077.077 0 01-.0076-.1277c.1258-.0943.2517-.1923.3718-.2914a.0743.0743 0 01.0776-.0105c3.9278 1.7933 8.18 1.7933 12.0614 0a.0739.0739 0 01.0785.0095c.1202.099.246.1981.3728.2924a.077.077 0 01-.0066.1276 12.2986 12.2986 0 01-1.873.8914.0766.0766 0 00-.0407.1067c.3604.698.7719 1.3628 1.225 1.9932a.076.076 0 00.0842.0286c1.961-.6067 3.9495-1.5219 6.0023-3.0294a.077.077 0 00.0313-.0552c.5004-5.177-.8382-9.6739-3.5485-13.6604a.061.061 0 00-.0312-.0286zM8.02 15.3312c-1.1825 0-2.1569-1.0857-2.1569-2.419 0-1.3332.9555-2.4189 2.157-2.4189 1.2108 0 2.1757 1.0952 2.1568 2.419 0 1.3332-.9555 2.4189-2.1569 2.4189zm7.9748 0c-1.1825 0-2.1569-1.0857-2.1569-2.419 0-1.3332.9554-2.4189 2.1569-2.4189 1.2108 0 2.1757 1.0952 2.1568 2.419 0 1.3332-.946 2.4189-2.1568 2.4189z"/></svg>
+            </a>
+            <a href="https://twitch.tv/saltouruguayserver" target="_blank" rel="noopener noreferrer" aria-label="Twitch" class="group flex items-center justify-center size-10 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 hover:border-white/20 hover:scale-110 transition-all duration-300 hover:shadow-[0_0_15px_rgba(139,92,246,0.2)]">
+              <svg class="w-5 h-5 text-white/70 group-hover:text-white transition-colors" fill="currentColor" viewBox="0 0 24 24"><path d="M11.571 4.714h1.715v5.143H11.57zm4.715 0H18v5.143h-1.714zM6 0L1.714 4.286v15.428h5.143V24l4.286-4.286h3.428L22.286 12V0zm14.571 11.143l-3.428 3.428h-3.429l-3 3v-3H6.857V1.714h13.714Z"/></svg>
+            </a>
+            <a href="https://x.com/SaltoUruguayS" target="_blank" rel="noopener noreferrer" aria-label="X (Twitter)" class="group flex items-center justify-center size-10 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 hover:border-white/20 hover:scale-110 transition-all duration-300 hover:shadow-[0_0_15px_rgba(139,92,246,0.2)]">
+              <svg class="w-5 h-5 text-white/70 group-hover:text-white transition-colors" fill="currentColor" viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+            </a>
+            <a href="https://github.com/yanquisalexander/saltouruguay-web" target="_blank" rel="noopener noreferrer" aria-label="GitHub" class="group flex items-center justify-center size-10 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 hover:border-white/20 hover:scale-110 transition-all duration-300 hover:shadow-[0_0_15px_rgba(139,92,246,0.2)]">
+              <svg class="w-5 h-5 text-white/70 group-hover:text-white transition-colors" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0C5.374 0 0 5.373 0 12c0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23A11.509 11.509 0 0112 5.803c1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576C20.566 21.797 24 17.3 24 12c0-6.627-5.373-12-12-12z"/></svg>
+            </a>
+          </div>
         </div>
       </div>
-      <div class="divider-violet mt-8 mb-4" />
-      <p class="text-center text-muted text-xs">&copy; {new Date().getFullYear()} <a href="https://saltouruguayserver.com" class="hover:text-accent transition">SaltoUruguayServer</a> &mdash; <a href="https://penca.saltouruguayserver.com" class="hover:text-accent transition">penca.saltouruguayserver.com</a></p>
+
+      <!-- DIVIDER -->
+      <div class="h-px w-full" style="background: linear-gradient(90deg, transparent, rgba(139,92,246,0.4), transparent);"></div>
+
+      <!-- BOTTOM BAR -->
+      <div class="flex flex-col md:flex-row items-center justify-between gap-4 mt-8 text-xs text-white/40 font-mono">
+        <p>&copy; {new Date().getFullYear()} <a href="https://saltouruguayserver.com" class="hover:text-accent transition">SaltoUruguayServer</a>. Todos los derechos reservados.</p>
+        <div class="flex items-center gap-1.5">
+          <span>Desarrollado con</span>
+          <svg class="w-3 h-3 text-red-500 animate-pulse" fill="currentColor" viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+          <span>por</span>
+          <a href="https://instagram.com/alexitoo_uy" target="_blank" rel="noopener noreferrer" class="text-white hover:text-accent underline underline-offset-2 transition-colors font-semibold">Alexitoo_UY</a>
+        </div>
+      </div>
     </div>
   </footer>
 
@@ -234,6 +307,43 @@ if (session?.user) {
 
         window.addEventListener("SignInError", () => {}, { once: true });
       }
+    });
+
+    // Navbar scroll shadow
+    const navbar = document.getElementById("navbar");
+    let ticking = false;
+    document.addEventListener("scroll", () => {
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          if (window.scrollY > 20) {
+            navbar.style.boxShadow = "0 4px 30px rgba(139, 92, 246, 0.1)";
+          } else {
+            navbar.style.boxShadow = "none";
+          }
+          ticking = false;
+        });
+        ticking = true;
+      }
+    });
+
+    // Scroll reveal
+    const revealElements = document.querySelectorAll(".scroll-reveal");
+    const revealObserver = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.style.opacity = "1";
+            entry.target.style.transform = "translateY(0)";
+          }
+        });
+      },
+      { threshold: 0.1 }
+    );
+    revealElements.forEach((el) => {
+      el.style.opacity = "0";
+      el.style.transform = "translateY(30px)";
+      el.style.transition = "opacity 0.6s ease-out, transform 0.6s ease-out";
+      revealObserver.observe(el);
     });
   </script>
 </Layout>

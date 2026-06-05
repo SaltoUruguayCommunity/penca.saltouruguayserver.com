@@ -53,7 +53,7 @@ export default function MatchCard({ match, prediction, session, onSubmit, submit
   }
 
   return (
-    <div class="glass-card !bg-accent-subtle/30 p-4">
+    <div class={`glass-card !bg-accent-subtle/30 p-4 transition-all duration-300 hover:shadow-[0_0_25px_rgba(139,92,246,0.1)] hover:-translate-y-0.5 ${isLive ? 'glow-green' : ''}`}>
       {/* Top row: date + stage + status */}
       <div class="flex items-center justify-between mb-4">
         <div class="flex items-center gap-3">
@@ -65,7 +65,7 @@ export default function MatchCard({ match, prediction, session, onSubmit, submit
         <span
           class={`badge-pill ${
             isLive
-              ? "!bg-green-accent/15 !text-green-accent"
+              ? "!bg-green-accent/15 !text-green-accent animate-glow-pulse"
               : isFinished
                 ? "!bg-zinc-800 !text-zinc-400"
                 : "!bg-accent/10 !text-accent-light"
@@ -200,9 +200,10 @@ export default function MatchCard({ match, prediction, session, onSubmit, submit
       <div class="mt-3 pt-2 border-t border-accent-border/10 text-center">
         <a
           href={`/matches/${match.id}`}
-          class="inline-flex items-center gap-1 text-[11px] text-muted hover:text-accent transition font-semibold uppercase tracking-wider"
+          class="inline-flex items-center gap-1 text-[11px] text-muted hover:text-accent transition font-semibold uppercase tracking-wider group"
         >
-          Ver detalle →
+          Ver detalle
+          <span class="inline-block transition-transform duration-200 group-hover:translate-x-1">→</span>
         </a>
       </div>
     </div>

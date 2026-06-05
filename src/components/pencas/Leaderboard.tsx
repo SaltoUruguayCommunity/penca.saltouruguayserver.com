@@ -23,7 +23,7 @@ const MEDAL_COLORS = [
 export default function Leaderboard({ entries, session }: Props) {
   if (entries.length === 0) {
     return (
-      <div class="glass-card p-12 text-center">
+      <div class="glass-card p-12 text-center glow-violet">
         <Medal class="h-12 w-12 mx-auto mb-4 text-accent/30" />
         <p class="text-muted text-sm">No hay puntos registrados aún.</p>
         <p class="text-muted/50 text-xs mt-1">¡Pronosticá partidos para aparecer en la tabla!</p>
@@ -32,7 +32,7 @@ export default function Leaderboard({ entries, session }: Props) {
   }
 
   return (
-    <div class="glass-card overflow-hidden">
+    <div class="glass-card overflow-hidden glow-violet">
       <table class="w-full text-sm">
         <thead>
           <tr class="bg-accent-subtle/50 text-muted text-[11px] uppercase tracking-[0.12em]">
@@ -44,16 +44,18 @@ export default function Leaderboard({ entries, session }: Props) {
         <tbody class="divide-y divide-accent-border/10">
           {entries.map((entry) => {
             const isMe = session?.user && entry.userId === session.user.id;
+            const glowClass = entry.position === 1 ? 'glow-gold' : entry.position === 2 ? 'glow-violet' : '';
             return (
               <tr
                 key={entry.userId}
                 class={`transition ${
                   isMe ? "bg-accent-subtle/30" : "hover:bg-accent-subtle/10"
                 }`}
+                style={isMe ? {boxShadow: 'inset 0 0 20px rgba(139,92,246,0.05)'} : {}}
               >
                 <td class="px-5 py-4">
                   {entry.position <= 3 ? (
-                    <div class={`w-8 h-8 rounded-full ${MEDAL_COLORS[entry.position - 1].bg} border ${MEDAL_COLORS[entry.position - 1].border} flex items-center justify-center`}>
+                    <div class={`w-8 h-8 rounded-full ${MEDAL_COLORS[entry.position - 1].bg} border ${MEDAL_COLORS[entry.position - 1].border} flex items-center justify-center ${glowClass}`}>
                       <Medal class={`h-4 w-4 ${MEDAL_COLORS[entry.position - 1].text}`} />
                     </div>
                   ) : (

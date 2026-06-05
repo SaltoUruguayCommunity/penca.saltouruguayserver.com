@@ -42,10 +42,10 @@ export default function LoginButton({ session }: Props) {
             <img
               src={session.user.image}
               alt={session.user.name ?? ""}
-              class="h-9 w-9 rounded-full object-cover ring-2 ring-accent/30"
+              class="h-9 w-9 rounded-full object-cover ring-2 ring-accent/30 shadow-[0_0_15px_rgba(139,92,246,0.15)]"
             />
           ) : (
-            <div class="h-9 w-9 rounded-full bg-accent-subtle border border-accent-border flex items-center justify-center">
+            <div class="h-9 w-9 rounded-full bg-accent-subtle border border-accent-border flex items-center justify-center shadow-[0_0_15px_rgba(139,92,246,0.1)]">
               <User class="h-4 w-4 text-accent" />
             </div>
           )}
@@ -54,7 +54,7 @@ export default function LoginButton({ session }: Props) {
               {session.user.username ?? session.user.name}
             </p>
             {typeof session.user.coins === "number" && (
-              <p class="text-[11px] text-gold font-semibold uppercase tracking-wider">
+              <p class="text-[11px] text-gold font-semibold uppercase tracking-wider drop-shadow-[0_0_10px_rgba(250,204,21,0.15)]">
                 ★ {session.user.coins} monedas
               </p>
             )}
@@ -62,7 +62,7 @@ export default function LoginButton({ session }: Props) {
         </div>
         <button
           onClick={handleSignOut}
-          class="flex items-center gap-1.5 text-xs uppercase tracking-wider text-muted hover:text-accent transition font-semibold cursor-pointer"
+          class="flex items-center gap-1.5 text-xs uppercase tracking-wider text-muted hover:text-accent transition font-semibold cursor-pointer hover:scale-105 active:scale-95"
         >
           <LogOut class="h-3.5 w-3.5" />
           <span class="hidden sm:inline">Salir</span>
@@ -75,7 +75,7 @@ export default function LoginButton({ session }: Props) {
     <div>
       <button
         onClick={handleSignIn}
-        class="btn-primary !py-2.5 !px-5 !text-xs cursor-pointer"
+        class="btn-primary !py-2.5 !px-5 !text-xs cursor-pointer hover:scale-105 active:scale-95 transition-transform"
       >
         Ingresar
       </button>

@@ -4,7 +4,6 @@ import { client } from "./src/db";
 import { UsersTable } from "./src/db/schema";
 
 export default defineConfig({
-  debug: true,
   providers: [
     {
       id: "saltouruguay",

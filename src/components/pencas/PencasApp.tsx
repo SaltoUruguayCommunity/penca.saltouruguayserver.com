@@ -107,10 +107,10 @@ export default function PencasApp({ session }: Props) {
   return (
     <div>
       {/* App header */}
-      <div class="glass-card p-4 sm:p-6 mb-6">
+      <div class="glass-card p-4 sm:p-6 mb-6 glow-violet">
         <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div>
-            <h3 class="font-barlow font-bold uppercase text-xl text-white">
+            <h3 class="font-barlow font-bold uppercase text-xl text-gradient">
               Panel de pronósticos
             </h3>
             <p class="text-muted text-sm mt-1">
@@ -121,7 +121,7 @@ export default function PencasApp({ session }: Props) {
           </div>
           <div class="flex items-center gap-2">
             {session?.user?.is_admin && (
-              <a href="/admin/pencas" class="text-xs font-barlow font-bold uppercase tracking-wider text-accent hover:text-accent-light transition px-3 py-2 rounded-md border border-accent-border/30 hover:border-accent/50">
+              <a href="/admin/pencas" class="text-xs font-barlow font-bold uppercase tracking-wider text-accent hover:text-accent-light transition px-3 py-2 rounded-md border border-accent-border/30 hover:border-accent/50 hover:shadow-[0_0_15px_rgba(139,92,246,0.15)]">
                 Admin
               </a>
             )}
@@ -136,29 +136,31 @@ export default function PencasApp({ session }: Props) {
       <div class="flex gap-1 mb-6 border-b border-accent-border/20">
         <button
           onClick={() => setTab("groups")}
-          class={`px-5 py-3 text-sm font-barlow font-bold uppercase tracking-wider transition border-b-2 -mb-[1px] ${
+          class={`relative px-5 py-3 text-sm font-barlow font-bold uppercase tracking-wider transition -mb-[1px] ${
             tab === "groups"
-              ? "text-accent border-accent"
-              : "text-muted border-transparent hover:text-white"
+              ? "text-accent"
+              : "text-muted hover:text-white"
           }`}
         >
           Grupos
+          <span class={`absolute bottom-0 left-0 h-0.5 bg-accent transition-all duration-300 ${tab === "groups" ? "w-full" : "w-0"}`}></span>
         </button>
         <button
           onClick={() => setTab("leaderboard")}
-          class={`px-5 py-3 text-sm font-barlow font-bold uppercase tracking-wider transition border-b-2 -mb-[1px] ${
+          class={`relative px-5 py-3 text-sm font-barlow font-bold uppercase tracking-wider transition -mb-[1px] ${
             tab === "leaderboard"
-              ? "text-accent border-accent"
-              : "text-muted border-transparent hover:text-white"
+              ? "text-accent"
+              : "text-muted hover:text-white"
           }`}
         >
           Tabla de posiciones
+          <span class={`absolute bottom-0 left-0 h-0.5 bg-accent transition-all duration-300 ${tab === "leaderboard" ? "w-full" : "w-0"}`}></span>
         </button>
       </div>
 
       {/* Content */}
       {loading ? (
-        <div class="glass-card p-12 text-center">
+        <div class="glass-card p-12 text-center glow-violet">
           <div class="w-8 h-8 border-2 border-accent border-t-transparent rounded-full animate-spin mx-auto mb-4" />
           <p class="text-muted text-sm">Cargando datos del mundial...</p>
         </div>

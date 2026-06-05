@@ -8,69 +8,278 @@ export const prerender = false;
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Conectando — Penca Mundial</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;900&family=Inter:wght@400;600&display=swap" rel="stylesheet" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Anton&family=Rubik:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
       * { margin: 0; padding: 0; box-sizing: border-box; }
       body {
-        background: #0f0f1a;
+        background: #050505;
         color: #fff;
-        font-family: 'Inter', sans-serif;
+        font-family: 'Rubik', sans-serif;
         min-height: 100vh;
         display: flex;
         align-items: center;
         justify-content: center;
+        overflow: hidden;
+        -webkit-font-smoothing: antialiased;
+      }
+
+      /* ===== Ambient Background ===== */
+      .bg-ambient {
+        position: fixed;
+        inset: 0;
+        z-index: -10;
+        background: #050505;
+      }
+      .bg-glow {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 600px;
+        height: 600px;
+        background: rgba(139, 92, 246, 0.08);
+        filter: blur(150px);
+        border-radius: 50%;
+        pointer-events: none;
+      }
+
+      /* ===== Card ===== */
+      .card-wrapper {
+        width: 100%;
+        max-width: 420px;
+        padding: 16px;
+        animation: fade-in 0.5s ease-out;
       }
       .card {
+        position: relative;
+        background: #0a0a0a;
+        border: 1px solid rgba(255,255,255,0.08);
+        border-radius: 24px;
+        padding: 40px 32px;
+        overflow: hidden;
+        box-shadow: 0 0 40px -10px rgba(0,0,0,0.7), inset 0 1px 1px rgba(255,255,255,0.12);
+      }
+      @media (max-width: 480px) {
+        .card { padding: 32px 20px; border-radius: 20px; }
+      }
+
+      /* ===== Loading Bar ===== */
+      .loading-bar-track {
+        position: absolute;
+        top: 0;
+        left: 0;
+        height: 3px;
+        width: 100%;
+        background: rgba(255,255,255,0.03);
+        overflow: hidden;
+      }
+      .loading-bar {
+        height: 100%;
+        background: #8B5CF6;
+        animation: loading-bar 1.5s infinite linear;
+      }
+      @keyframes loading-bar {
+        0% { width: 0%; transform: translateX(-100%); }
+        50% { width: 50%; }
+        100% { width: 100%; transform: translateX(100%); }
+      }
+
+      /* ===== Connection Visualization ===== */
+      .conn-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 32px;
+        padding: 0 8px;
+      }
+      .logo-wrap {
+        position: relative;
+      }
+      .logo-glow {
+        position: absolute;
+        inset: -8px;
+        border-radius: 50%;
+        filter: blur(20px);
+        opacity: 0.5;
+      }
+      .logo-wrap:hover .logo-glow { opacity: 0.8; }
+      .logo-glow-blue { background: rgba(59, 130, 246, 0.2); }
+      .logo-glow-purple { background: rgba(139, 92, 246, 0.2); }
+      .logo-glow-gold { background: rgba(250, 204, 21, 0.15); }
+      .logo-img {
+        position: relative;
+        width: 64px;
+        height: 64px;
+        object-fit: contain;
+        filter: drop-shadow(0 4px 12px rgba(0,0,0,0.4));
+      }
+      @media (max-width: 480px) {
+        .logo-img { width: 48px; height: 48px; }
+      }
+
+      /* ===== Connection Dots ===== */
+      .conn-dots {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 4px;
+      }
+      .conn-dots-row {
+        display: flex;
+        gap: 4px;
+      }
+      .conn-dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: #8B5CF6;
+      }
+      .conn-dot:nth-child(1) { animation: dot-pulse 1.4s ease-in-out 0s infinite; }
+      .conn-dot:nth-child(2) { animation: dot-pulse 1.4s ease-in-out 0.2s infinite; }
+      .conn-dot:nth-child(3) { animation: dot-pulse 1.4s ease-in-out 0.4s infinite; }
+      @keyframes dot-pulse {
+        0%, 100% { opacity: 0.2; }
+        50% { opacity: 1; }
+      }
+      .conn-arrow {
+        color: rgba(139, 92, 246, 0.4);
+        width: 20px;
+        height: 20px;
+      }
+
+      /* ===== Typography ===== */
+      .title {
+        font-family: 'Anton', sans-serif;
+        font-size: 24px;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        color: #fff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+      }
+      .subtitle {
+        color: rgba(255,255,255,0.7);
+        font-weight: 700;
+        font-size: 14px;
+      }
+      .desc {
+        color: rgba(255,255,255,0.35);
+        font-size: 12px;
+        line-height: 1.6;
+        max-width: 280px;
+        margin: 0 auto;
+      }
+      .footer-text {
         text-align: center;
-        padding: 48px;
+        margin-top: 24px;
+        font-size: 10px;
+        font-family: monospace;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+        color: rgba(255,255,255,0.12);
       }
-      .logo {
-        font-family: 'Barlow Condensed', sans-serif;
-        font-weight: 900;
-        font-size: 28px;
-        letter-spacing: -0.02em;
-        margin-bottom: 24px;
-      }
-      .logo span { color: #8B5CF6; }
+
+      /* ===== Spinner ===== */
       .spinner {
-        width: 32px;
-        height: 32px;
-        border: 3px solid rgba(139,92,246,0.2);
+        width: 22px;
+        height: 22px;
+        border: 2.5px solid rgba(139,92,246,0.2);
         border-top-color: #8B5CF6;
         border-radius: 50%;
         animation: spin 0.7s linear infinite;
-        margin: 0 auto 20px;
+        display: inline-block;
+        vertical-align: middle;
       }
       @keyframes spin { to { transform: rotate(360deg); } }
-      p {
-        color: #A1A1AA;
-        font-size: 14px;
-        line-height: 1.5;
+
+      /* ===== Entrance ===== */
+      @keyframes fade-in {
+        from { opacity: 0; transform: scale(0.95); }
+        to { opacity: 1; transform: scale(1); }
       }
-      .badge {
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        padding: 4px 12px;
-        border-radius: 999px;
-        font-size: 11px;
-        font-weight: 600;
-        text-transform: uppercase;
-        letter-spacing: 0.1em;
-        background: rgba(139,92,246,0.15);
-        color: #A78BFA;
-        margin-bottom: 20px;
+
+      /* ===== SVG fallback for SALTO ===== */
+      .salto-logo {
+        width: 64px; height: 64px;
+        position: relative;
       }
+      @media (max-width: 480px) {
+        .salto-logo { width: 48px; height: 48px; }
+      }
+      .salto-logo svg { width: 100%; height: 100%; }
     </style>
   </head>
   <body>
-    <div class="card">
-      <div class="badge">⚽ SaltoUruguayServer</div>
-      <div class="logo">LA <span>PENCA</span></div>
-      <div class="spinner"></div>
-      <p>Conectando con SaltoUruguayServer...</p>
+    <!-- Ambient Background -->
+    <div class="bg-ambient">
+      <div class="bg-glow"></div>
+    </div>
+
+    <!-- Card -->
+    <div class="card-wrapper">
+      <div class="card">
+        <!-- Loading Bar -->
+        <div class="loading-bar-track">
+          <div class="loading-bar"></div>
+        </div>
+
+        <!-- Connection Visualization -->
+        <div class="conn-row">
+          <!-- Salto Logo -->
+          <div class="logo-wrap">
+            <div class="logo-glow logo-glow-blue"></div>
+            <div class="salto-logo">
+              <svg viewBox="0 0 64 64" fill="none">
+                <circle cx="32" cy="32" r="28" fill="rgba(139,92,246,0.08)" stroke="rgba(139,92,246,0.25)" stroke-width="1.5"/>
+                <text x="32" y="39" text-anchor="middle" fill="#8B5CF6" font-family="Anton" font-size="30">S</text>
+              </svg>
+            </div>
+          </div>
+
+          <!-- Connection Arrow -->
+          <div class="conn-dots">
+            <div class="conn-dots-row">
+              <div class="conn-dot"></div>
+              <div class="conn-dot"></div>
+              <div class="conn-dot"></div>
+            </div>
+            <svg class="conn-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <path d="M5 12h14M12 5l7 7-7 7"/>
+            </svg>
+          </div>
+
+          <!-- Penca Logo -->
+          <div class="logo-wrap">
+            <div class="logo-glow logo-glow-gold"></div>
+            <div class="logo-img" style="display:flex; align-items:center; justify-content:center; background: rgba(250,204,21,0.06); border-radius: 50%; border: 1px solid rgba(250,204,21,0.15);">
+              <span style="font-size: 30px;">⚽</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Text Content -->
+        <div style="text-align: center; display: flex; flex-direction: column; gap: 16px;">
+          <h1 class="title">
+            <span class="spinner"></span>
+            Conectando...
+          </h1>
+
+          <div style="display: flex; flex-direction: column; gap: 6px;">
+            <p class="subtitle">
+              Solicitando acceso a SaltoUruguayServer
+            </p>
+            <p class="desc">
+              Con tu cuenta podrás pronosticar los partidos, acumular puntos y competir en el ranking.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <p class="footer-text">Redireccionando de forma segura</p>
     </div>
 
     <script>

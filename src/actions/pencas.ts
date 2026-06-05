@@ -272,116 +272,125 @@ export const pencas = {
       handler: async (_, { request }) => {
         await requireAdmin(request);
 
-        const standings = await fetchCompetitionStandings("WC");
-        const matchesRes = await fetchCompetitionMatches("WC");
-
-        console.log(JSON.stringify({ standings, matchesRes }));
+        // 1. Fetch externo en paralelo
+        const [standings, matchesRes] = await Promise.all([
+          fetchCompetitionStandings("WC"),
+          fetchCompetitionMatches("WC"),
+        ]);
 
         function normalizeGroup(raw: string | null): string | null {
           if (!raw) return null;
           const cleaned = raw.trim().toUpperCase();
-          // API returns "GROUP_A", "Group A", or just "A"
           const match = cleaned.match(/^GROUP[ _]+([A-Z])$/);
           if (match) return match[1];
-          // Standings sometimes returns just the letter
           if (/^[A-Z]$/.test(cleaned)) return cleaned;
           return null;
         }
 
-        for (const standing of standings.standings) {
-          if (!standing.group) continue;
+        // 2. Extraer grupos únicos desde standings
+        const groupNames = [
+          ...new Set(
+            standings.standings
+              .map((s) => normalizeGroup(s.group))
+              .filter((g): g is string => g !== null),
+          ),
+        ];
 
-          const groupName = normalizeGroup(standing.group);
-          if (!groupName) continue;
+        // 3. Leer grupos existentes UNA sola vez
+        const existingGroups = await client.select().from(WcGroupsTable).all();
+        const existingGroupNames = new Set(existingGroups.map((g) => g.name));
 
-          let group = await client
-            .select()
-            .from(WcGroupsTable)
-            .where(eq(WcGroupsTable.name, groupName))
-            .get();
-
-          if (!group) {
-            await turso.execute({ sql: "INSERT INTO wc_groups (name) VALUES (?)", args: [groupName] });
-            group = await client
-              .select()
-              .from(WcGroupsTable)
-              .where(eq(WcGroupsTable.name, groupName))
-              .get();
-          }
-
-          for (const entry of standing.table) {
-            const existing = await client
-              .select()
-              .from(WcTeamsTable)
-              .where(eq(WcTeamsTable.fifaCode, entry.team.tla))
-              .get();
-
-            if (!existing) {
-              await client
-                .insert(WcTeamsTable)
-                .values({
-                  groupId: group.id,
-                  name: entry.team.name,
-                  flag: entry.team.crest,
-                  fifaCode: entry.team.tla,
-                })
-                .run();
-            }
-          }
+        // 4. Insertar grupos faltantes en UN solo batch
+        const missingGroups = groupNames.filter((n) => !existingGroupNames.has(n));
+        if (missingGroups.length > 0) {
+          await client
+            .insert(WcGroupsTable)
+            .values(missingGroups.map((name) => ({ name })))
+            .run();
         }
 
-        const groupMap = new Map(
-          (await client.select().from(WcGroupsTable).all()).map((g) => [g.name, g.id]),
-        );
-        const teamMap = new Map(
-          (await client.select().from(WcTeamsTable).all()).map((t) => [t.fifaCode, t.id]),
+        // 5. Recargar y construir mapa (una query)
+        const allGroups = await client.select().from(WcGroupsTable).all();
+        const groupMap = new Map(allGroups.map((g) => [g.name, g.id]));
+
+        // 6. Extraer equipos únicos desde standings
+        const teamsToUpsert = standings.standings.flatMap((standing) => {
+          const groupName = normalizeGroup(standing.group);
+          const groupId = groupName ? groupMap.get(groupName) : undefined;
+          if (!groupId) return [];
+          return standing.table.map((entry) => ({
+            fifaCode: entry.team.tla,
+            name: entry.team.name,
+            flag: entry.team.crest,
+            groupId,
+          }));
+        });
+
+        // 7. Leer equipos existentes UNA sola vez
+        const existingTeams = await client.select().from(WcTeamsTable).all();
+        const existingFifaCodes = new Set(existingTeams.map((t) => t.fifaCode));
+
+        // 8. Insertar equipos faltantes en UN solo batch
+        const newTeams = teamsToUpsert.filter((t) => !existingFifaCodes.has(t.fifaCode));
+        if (newTeams.length > 0) {
+          await client.insert(WcTeamsTable).values(newTeams).run();
+        }
+
+        // 9. Mapa de equipos actualizado (una query)
+        const allTeams = await client.select().from(WcTeamsTable).all();
+        const teamMap = new Map(allTeams.map((t) => [t.fifaCode, t.id]));
+
+        // 10. Leer partidos existentes UNA sola vez
+        const existingMatches = await client.select().from(WcMatchesTable).all();
+        const matchKey = (homeId: number, awayId: number, date: string) =>
+          `${homeId}_${awayId}_${date}`;
+        const existingMatchMap = new Map(
+          existingMatches.map((m) => [matchKey(m.homeTeamId, m.awayTeamId, m.matchDate), m]),
         );
 
+        const matchesToInsert: (typeof WcMatchesTable.$inferInsert)[] = [];
+        const matchesToUpdate: { id: number; groupId: number }[] = [];
+
+        // 11. Calcular diffs en memoria — cero queries en el loop
         for (const match of matchesRes.matches) {
-          const homeTla = match.homeTeam.tla;
-          const awayTla = match.awayTeam.tla;
-          const homeTeamId = teamMap.get(homeTla);
-          const awayTeamId = teamMap.get(awayTla);
-
+          const homeTeamId = teamMap.get(match.homeTeam.tla);
+          const awayTeamId = teamMap.get(match.awayTeam.tla);
           if (!homeTeamId || !awayTeamId) continue;
 
           const groupName = normalizeGroup(match.group);
-          const groupId = groupName ? groupMap.get(groupName) ?? null : null;
-
-          const existing = await client
-            .select()
-            .from(WcMatchesTable)
-            .where(
-              and(
-                eq(WcMatchesTable.homeTeamId, homeTeamId),
-                eq(WcMatchesTable.awayTeamId, awayTeamId),
-                eq(WcMatchesTable.matchDate, match.utcDate),
-              ),
-            )
-            .get();
+          const groupId = groupName ? (groupMap.get(groupName) ?? null) : null;
+          const key = matchKey(homeTeamId, awayTeamId, match.utcDate);
+          const existing = existingMatchMap.get(key);
 
           if (!existing) {
-            await client
-              .insert(WcMatchesTable)
-              .values({
-                groupId,
-                homeTeamId,
-                awayTeamId,
-                matchDate: match.utcDate,
-                stage: mapStage(match.stage || match.group ? "GROUP_STAGE" : ""),
-                status: mapStatus(match.status),
-                homeScore: match.score.fullTime.home,
-                awayScore: match.score.fullTime.away,
-              })
-              .run();
+            matchesToInsert.push({
+              groupId,
+              homeTeamId,
+              awayTeamId,
+              matchDate: match.utcDate,
+              stage: mapStage(match.stage || match.group ? "GROUP_STAGE" : ""),
+              status: mapStatus(match.status),
+              homeScore: match.score.fullTime.home,
+              awayScore: match.score.fullTime.away,
+            });
           } else if (existing.groupId === null && groupId !== null) {
-            await client
-              .update(WcMatchesTable)
-              .set({ groupId, updatedAt: sql`(current_timestamp)` })
-              .where(eq(WcMatchesTable.id, existing.id))
-              .run();
+            matchesToUpdate.push({ id: existing.id, groupId });
           }
         }
+
+        // 12. Batch insert + batch updates en paralelo
+        await Promise.all([
+          matchesToInsert.length > 0
+            ? client.insert(WcMatchesTable).values(matchesToInsert).run()
+            : Promise.resolve(),
+          ...matchesToUpdate.map(({ id, groupId }) =>
+            client
+              .update(WcMatchesTable)
+              .set({ groupId, updatedAt: sql`(current_timestamp)` })
+              .where(eq(WcMatchesTable.id, id))
+              .run(),
+          ),
+        ]);
 
         return { success: true };
       },

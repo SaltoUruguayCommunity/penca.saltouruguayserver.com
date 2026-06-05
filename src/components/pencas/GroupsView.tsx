@@ -43,7 +43,7 @@ export default function GroupsView({ groups, predictions, session, onSubmit, sub
 
   if (groups.length === 0) {
     return (
-      <div class="glass-card p-12 text-center">
+      <div class="glass-card p-12 text-center glow-violet">
         <Trophy class="h-12 w-12 mx-auto mb-4 text-accent/30" />
         <p class="text-muted text-sm">La competencia aún no ha comenzado.</p>
         <p class="text-muted/50 text-xs mt-2 max-w-xs mx-auto leading-relaxed">
@@ -56,7 +56,7 @@ export default function GroupsView({ groups, predictions, session, onSubmit, sub
   return (
     <div class="space-y-3">
       {groups.map((group) => (
-        <div key={group.name} class="glass-card overflow-hidden">
+        <div key={group.name} class={`glass-card overflow-hidden transition-all duration-300 ${openGroups.has(group.name) ? 'glow-violet' : 'hover:shadow-[0_0_20px_rgba(139,92,246,0.06)]'}`}>
           <button
             onClick={() => toggleGroup(group.name)}
             class="w-full flex items-center justify-between gap-3 px-5 py-4 text-left hover:bg-accent-subtle/50 transition"
@@ -90,7 +90,7 @@ export default function GroupsView({ groups, predictions, session, onSubmit, sub
           </button>
 
           {openGroups.has(group.name) && (
-            <div class="border-t border-accent-border/20 p-4 sm:p-5 space-y-3">
+            <div class="border-t border-accent-border/20 p-4 sm:p-5 space-y-3 animate-scale-in">
               {group.matches.length === 0 ? (
                 <div class="text-center py-8">
                   <p class="text-muted/50 text-sm">Sin partidos disponibles.</p>

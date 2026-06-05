@@ -25,7 +25,7 @@ export default function Toaster() {
       {toasts.map((t) => (
         <div
           key={t.id}
-          class="pointer-events-auto flex items-start gap-3 px-4 py-3 rounded-lg shadow-lg border backdrop-blur-md"
+          class="pointer-events-auto flex items-start gap-3 px-4 py-3 rounded-lg shadow-lg border backdrop-blur-md animate-slide-in-right"
           style={{
             background: t.type === "success"
               ? "rgba(34,197,94,0.12)"
@@ -37,6 +37,11 @@ export default function Toaster() {
               : t.type === "error"
               ? "rgba(239,68,68,0.4)"
               : "rgba(139,92,246,0.4)",
+            boxShadow: t.type === "success"
+              ? "0 0 25px rgba(34,197,94,0.15)"
+              : t.type === "error"
+              ? "0 0 25px rgba(239,68,68,0.15)"
+              : "0 0 25px rgba(139,92,246,0.15)",
           }}
         >
           <svg

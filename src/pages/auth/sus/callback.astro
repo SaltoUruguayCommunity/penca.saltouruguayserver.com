@@ -8,82 +8,284 @@ export const prerender = false;
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Conectado — Penca Mundial</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;900&family=Inter:wght@400;600&display=swap" rel="stylesheet" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Anton&family=Rubik:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
       * { margin: 0; padding: 0; box-sizing: border-box; }
       body {
-        background: #0f0f1a;
+        background: #050505;
         color: #fff;
-        font-family: 'Inter', sans-serif;
+        font-family: 'Rubik', sans-serif;
         min-height: 100vh;
         display: flex;
         align-items: center;
         justify-content: center;
+        overflow: hidden;
+        -webkit-font-smoothing: antialiased;
+      }
+
+      /* ===== Ambient Background ===== */
+      .bg-ambient {
+        position: fixed;
+        inset: 0;
+        z-index: -10;
+        background: #050505;
+      }
+      .bg-glow {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 500px;
+        height: 500px;
+        background: rgba(139, 92, 246, 0.08);
+        filter: blur(120px);
+        border-radius: 50%;
+        pointer-events: none;
+      }
+
+      /* ===== Card ===== */
+      .card-wrapper {
+        width: 100%;
+        max-width: 420px;
+        padding: 16px;
+        animation: fade-in 0.3s ease-out;
       }
       .card {
+        position: relative;
+        background: #0a0a0a;
+        border: 1px solid rgba(255,255,255,0.08);
+        border-radius: 24px;
+        padding: 48px 32px;
+        overflow: hidden;
         text-align: center;
-        padding: 48px;
+        box-shadow: 0 0 40px -10px rgba(0,0,0,0.7), inset 0 1px 1px rgba(255,255,255,0.12);
       }
-      .logo {
-        font-family: 'Barlow Condensed', sans-serif;
-        font-weight: 900;
-        font-size: 28px;
-        letter-spacing: -0.02em;
-        margin-bottom: 24px;
+      .card-error {
+        border-color: rgba(239,68,68,0.2);
+        box-shadow: 0 0 40px -10px rgba(0,0,0,0.7), inset 0 1px 1px rgba(255,255,255,0.12), 0 0 30px rgba(239,68,68,0.05);
       }
-      .logo span { color: #8B5CF6; }
-      .spinner {
-        width: 32px;
-        height: 32px;
+      @media (max-width: 480px) {
+        .card { padding: 40px 20px; border-radius: 20px; }
+      }
+
+      /* ===== Loading Bar ===== */
+      .loading-bar-track {
+        position: absolute;
+        top: 0;
+        left: 0;
+        height: 3px;
+        width: 100%;
+        background: rgba(255,255,255,0.03);
+        overflow: hidden;
+      }
+      .loading-bar {
+        height: 100%;
+        background: #8B5CF6;
+        animation: loading-bar 1.5s infinite linear;
+      }
+      @keyframes loading-bar {
+        0% { width: 0%; transform: translateX(-100%); }
+        50% { width: 50%; }
+        100% { width: 100%; transform: translateX(100%); }
+      }
+
+      /* ===== Icon Circles ===== */
+      .icon-circle {
+        width: 72px;
+        height: 72px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 20px;
+      }
+      .icon-circle-loading {
+        background: rgba(139,92,246,0.1);
+        border: 1px solid rgba(139,92,246,0.25);
+      }
+      .icon-circle-success {
+        background: rgba(34,197,94,0.1);
+        border: 1px solid rgba(34,197,94,0.3);
+        animation: pulse-glow 2s ease-in-out infinite;
+      }
+      .icon-circle-error {
+        background: rgba(239,68,68,0.1);
+        border: 1px solid rgba(239,68,68,0.3);
+      }
+
+      @keyframes pulse-glow {
+        0%, 100% { box-shadow: 0 0 0px rgba(34,197,94,0); }
+        50% { box-shadow: 0 0 30px rgba(34,197,94,0.15); }
+      }
+
+      .icon-spinner {
+        width: 28px;
+        height: 28px;
         border: 3px solid rgba(139,92,246,0.2);
         border-top-color: #8B5CF6;
         border-radius: 50%;
         animation: spin 0.7s linear infinite;
-        margin: 0 auto 20px;
       }
       @keyframes spin { to { transform: rotate(360deg); } }
-      .check {
-        width: 48px;
-        height: 48px;
-        border-radius: 50%;
-        background: rgba(34,197,94,0.15);
-        border: 2px solid rgba(34,197,94,0.3);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        margin: 0 auto 20px;
-        font-size: 24px;
+
+      .icon-check {
+        font-size: 32px;
+        color: #22C55E;
       }
-      .error-icon {
-        width: 48px;
-        height: 48px;
-        border-radius: 50%;
-        background: rgba(239,68,68,0.15);
-        border: 2px solid rgba(239,68,68,0.3);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        margin: 0 auto 20px;
-        font-size: 24px;
+      .icon-x {
+        font-size: 32px;
+        color: #EF4444;
       }
-      p {
-        color: #A1A1AA;
+
+      /* ===== Typography ===== */
+      .title {
+        font-family: 'Anton', sans-serif;
+        font-size: 22px;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        color: #fff;
+        margin-bottom: 8px;
+      }
+      .text-muted {
+        color: rgba(255,255,255,0.5);
         font-size: 14px;
       }
+      .text-muted-light {
+        color: rgba(255,255,255,0.35);
+        font-size: 13px;
+      }
+      .loading-row {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        color: rgba(255,255,255,0.45);
+        font-size: 13px;
+      }
+      .loading-row .mini-spinner {
+        width: 12px;
+        height: 12px;
+        border: 1.5px solid rgba(139,92,246,0.2);
+        border-top-color: #8B5CF6;
+        border-radius: 50%;
+        animation: spin 0.7s linear infinite;
+        display: inline-block;
+      }
+
+      .retry-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        margin-top: 24px;
+        padding: 10px 24px;
+        background: rgba(255,255,255,0.08);
+        color: #fff;
+        border: 1px solid rgba(255,255,255,0.1);
+        border-radius: 10px;
+        font-size: 14px;
+        font-weight: 600;
+        text-decoration: none;
+        cursor: pointer;
+        transition: background 0.2s;
+      }
+      .retry-btn:hover {
+        background: rgba(255,255,255,0.14);
+      }
+
+      .fallback-link {
+        text-align: center;
+        margin-top: 20px;
+        font-size: 12px;
+        color: rgba(255,255,255,0.15);
+      }
+      .fallback-link a {
+        color: rgba(255,255,255,0.4);
+        text-decoration: underline;
+      }
+
       .hidden { display: none; }
+
+      /* ===== Entrance ===== */
+      @keyframes fade-in {
+        from { opacity: 0; transform: scale(0.95); }
+        to { opacity: 1; transform: scale(1); }
+      }
+      @keyframes scale-in {
+        from { opacity: 0; transform: scale(0.85); }
+        to { opacity: 1; transform: scale(1); }
+      }
+      .animate-scale-in {
+        animation: scale-in 0.3s ease-out forwards;
+      }
     </style>
   </head>
   <body>
-    <div class="card" id="card">
-      <div class="spinner" id="loadingSpinner"></div>
-      <p id="statusText">Verificando sesión...</p>
+    <!-- Ambient Background -->
+    <div class="bg-ambient">
+      <div class="bg-glow"></div>
+    </div>
+
+    <!-- Card -->
+    <div class="card-wrapper">
+      <div class="card" id="mainCard">
+        <!-- Loading Bar -->
+        <div class="loading-bar-track" id="loadingBar">
+          <div class="loading-bar"></div>
+        </div>
+
+        <!-- Loading State -->
+        <div id="loadingState">
+          <div class="icon-circle icon-circle-loading">
+            <div class="icon-spinner"></div>
+          </div>
+          <p class="title">Verificando sesión...</p>
+          <p class="text-muted-light">Un momento por favor</p>
+        </div>
+
+        <!-- Success State -->
+        <div id="successState" class="hidden animate-scale-in">
+          <div class="icon-circle icon-circle-success">
+            <span class="icon-check">✓</span>
+          </div>
+          <p class="title">¡Sesión iniciada!</p>
+          <p class="loading-row">
+            <span class="mini-spinner"></span>
+            Ingresando al sistema...
+          </p>
+        </div>
+
+        <!-- Error State -->
+        <div id="errorState" class="hidden animate-scale-in">
+          <div class="icon-circle icon-circle-error">
+            <span class="icon-x">✕</span>
+          </div>
+          <p class="title">Error de Acceso</p>
+          <p class="text-muted" id="errorMessage">No se pudo iniciar sesión</p>
+          <a href="/auth/sus" class="retry-btn">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <path d="M1 4v6h6M23 20v-6h-6"/>
+              <path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"/>
+            </svg>
+            Intentar de nuevo
+          </a>
+        </div>
+      </div>
+
+      <p class="fallback-link" id="fallbackLink" style="display:none;">
+        ¿No te redirige? <a href="/">Haz clic aquí</a>
+      </p>
     </div>
 
     <script>
-      const $spinner = document.getElementById("loadingSpinner");
-      const $status = document.getElementById("statusText");
+      const $card = document.getElementById("mainCard");
+      const $loadingBar = document.getElementById("loadingBar");
+      const $loading = document.getElementById("loadingState");
+      const $success = document.getElementById("successState");
+      const $error = document.getElementById("errorState");
+      const $errorMsg = document.getElementById("errorMessage");
+      const $fallback = document.getElementById("fallbackLink");
 
       setTimeout(async () => {
         try {
@@ -91,8 +293,11 @@ export const prerender = false;
           const session = await res.json();
 
           if (session?.user) {
-            $spinner.outerHTML = '<div class="check">✓</div>';
-            $status.textContent = "¡Sesión iniciada!";
+            $loading.classList.add("hidden");
+            $loadingBar.classList.add("hidden");
+            $success.classList.remove("hidden");
+            $fallback.style.display = "block";
+            $card.classList.remove("card-error");
 
             setTimeout(() => {
               if (window.opener) {
@@ -103,30 +308,22 @@ export const prerender = false;
               }
             }, 800);
           } else {
-            $spinner.outerHTML = '<div class="error-icon">✕</div>';
-            $status.textContent = "No se pudo iniciar sesión";
-
-            setTimeout(() => {
-              if (window.opener) {
-                window.opener.dispatchEvent(
-                  new CustomEvent("SignInError", { detail: { error: "No se pudo iniciar sesión" } })
-                );
-                window.close();
-              } else {
-                location.href = "/";
-              }
-            }, 1200);
+            throw new Error("No session");
           }
-        } catch {
-          $spinner.outerHTML = '<div class="error-icon">✕</div>';
-          $status.textContent = "Error de conexión";
+        } catch (err) {
+          $loading.classList.add("hidden");
+          $loadingBar.classList.add("hidden");
+          $error.classList.remove("hidden");
+          $card.classList.add("card-error");
 
           setTimeout(() => {
             if (window.opener) {
               window.opener.dispatchEvent(
-                new CustomEvent("SignInError", { detail: { error: "Error de conexión" } })
+                new CustomEvent("SignInError", { detail: { error: "No se pudo iniciar sesión" } })
               );
               window.close();
+            } else {
+              location.href = "/";
             }
           }, 1200);
         }

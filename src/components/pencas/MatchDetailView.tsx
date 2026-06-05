@@ -144,7 +144,7 @@ export default function MatchDetailView({ match, predictions: initialPredictions
         </div>
       )}
       {isLive && (
-        <div class="glass-card p-4 flex items-center gap-3 border-green-accent/20">
+        <div class="glass-card p-4 flex items-center gap-3 border-green-accent/20 glow-green">
           <span class="w-2 h-2 rounded-full bg-green-accent animate-pulse" />
           <p class="text-sm font-semibold text-green-accent">Partido en juego</p>
         </div>
@@ -207,14 +207,14 @@ export default function MatchDetailView({ match, predictions: initialPredictions
       )}
 
       <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div class="glass-card p-5 text-center">
+        <div class="glass-card p-5 text-center hover:shadow-[0_0_20px_rgba(139,92,246,0.1)] transition-all duration-300">
           <Users class="h-5 w-5 mx-auto mb-2 text-accent" />
           <div class="font-barlow font-black text-2xl text-white">{totalPredictions}</div>
           <div class="text-[11px] text-muted uppercase tracking-wider font-semibold mt-1">Pronosticos</div>
         </div>
         {isFinished && match.homeScore !== null && match.awayScore !== null && (
           <>
-            <div class="glass-card p-5 text-center">
+            <div class="glass-card p-5 text-center hover:shadow-[0_0_20px_rgba(139,92,246,0.1)] transition-all duration-300">
               <BarChart3 class="h-5 w-5 mx-auto mb-2 text-accent" />
               <div class="font-barlow font-black text-2xl text-white">
                 {totalPredictions > 0
@@ -230,7 +230,7 @@ export default function MatchDetailView({ match, predictions: initialPredictions
               </div>
               <div class="text-[11px] text-muted uppercase tracking-wider font-semibold mt-1">Acertaron exacto</div>
             </div>
-            <div class="glass-card p-5 text-center">
+            <div class="glass-card p-5 text-center hover:shadow-[0_0_20px_rgba(139,92,246,0.1)] transition-all duration-300">
               <Trophy class="h-5 w-5 mx-auto mb-2 text-accent" />
               <div class="font-barlow font-black text-2xl text-white">
                 {totalPredictions > 0
@@ -253,7 +253,7 @@ export default function MatchDetailView({ match, predictions: initialPredictions
           </>
         )}
         {!isFinished && topPrediction && (
-          <div class="glass-card p-5 text-center sm:col-span-2">
+          <div class="glass-card p-5 text-center sm:col-span-2 glow-gold">
             <div class="font-barlow font-black text-2xl text-white">{topPrediction[0]}</div>
             <div class="text-[11px] text-muted uppercase tracking-wider font-semibold mt-1">
               Resultado mas pronosticado ({topPrediction[1]} votos)
@@ -297,7 +297,7 @@ export default function MatchDetailView({ match, predictions: initialPredictions
                     );
 
                     return (
-                      <tr key={p.userId} class={`transition ${isMe ? "bg-accent-subtle/30" : "hover:bg-accent-subtle/10"}`}>
+                      <tr key={p.userId} class={`transition ${isMe ? "bg-accent-subtle/30" : "hover:bg-accent-subtle/10"}`} style={isMe ? {boxShadow: 'inset 0 0 20px rgba(139,92,246,0.05)'} : {}}>
                         <td class="px-5 py-3">
                           <div class="flex items-center gap-2.5">
                             {p.avatar ? (
