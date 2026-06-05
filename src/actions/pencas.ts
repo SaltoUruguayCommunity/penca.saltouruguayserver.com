@@ -237,7 +237,7 @@ export const pencas = {
         .from(UsersTable)
         .leftJoin(WcPredictionsTable, eq(UsersTable.id, WcPredictionsTable.userId))
         .groupBy(UsersTable.id, UsersTable.username, UsersTable.avatar)
-        .orderBy(desc(sql`totalPoints`))
+        .orderBy(desc(sql`COALESCE(SUM(${WcPredictionsTable.points}), 0)`))
         .all();
 
       return rankings.map((r, i) => ({
