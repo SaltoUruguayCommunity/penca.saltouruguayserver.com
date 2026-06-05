@@ -122,6 +122,17 @@ export const pencas = {
         });
       }
 
+      const existing = await client
+        .select()
+        .from(WcPredictionsTable)
+        .where(
+          and(
+            eq(WcPredictionsTable.userId, session.user.id),
+            eq(WcPredictionsTable.matchId, matchId),
+          ),
+        )
+        .get();
+
       await client
         .insert(WcPredictionsTable)
         .values({
@@ -136,7 +147,9 @@ export const pencas = {
         })
         .run();
 
-      await rewardPrediction(session.user.id);
+      if (!existing) {
+        await rewardPrediction(session.user.id);
+      }
 
       return { success: true };
     },
