@@ -542,13 +542,15 @@ async function recalculateMatchPoints(matchId: number) {
       .where(eq(WcPredictionsTable.id, pred.id))
       .run();
 
-    if (points === 5) {
+    const wasAlreadyScored = pred.points !== null;
+
+    if (!wasAlreadyScored && points === 5) {
       await rewardExactScore(pred.userId);
     }
 
-    // Streak logic
+    // Streak logic — only update on first scoring
     const user = userMap.get(pred.userId);
-    if (user) {
+    if (!wasAlreadyScored && user) {
       const prevStreak = user.streak;
       const newStreak = points > 0 ? prevStreak + 1 : 0;
       const newBestStreak = Math.max(user.bestStreak, newStreak);

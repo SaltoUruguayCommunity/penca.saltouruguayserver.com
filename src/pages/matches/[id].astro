@@ -85,7 +85,7 @@ const isFinished = match.status === "finished";
 const isLive = !isFinished && matchDate <= new Date();
 ---
 
-<Layout title={`${match.homeTeam.name} vs ${match.awayTeam.name}`} description={`Pronóstico del partido ${match.homeTeam.name} vs ${match.awayTeam.name} por ${STAGE_LABELS[match.stage] ?? match.stage} del Mundial 2026.`} image={match.homeTeam.flag ?? match.awayTeam.flag ?? "/og-default.png"}>
+<Layout title={`${match.homeTeam.name} vs ${match.awayTeam.name}`} description={`Pronóstico del partido ${match.homeTeam.name} vs ${match.awayTeam.name} por ${STAGE_LABELS[match.stage] ?? match.stage} del Mundial 2026.`} image={match.homeTeam.flag ?? match.awayTeam.flag ?? undefined}>
   <div class="min-h-screen">
     <!-- Ambient Background -->
     <div class="fixed inset-0 pointer-events-none overflow-hidden">
