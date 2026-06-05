@@ -234,8 +234,8 @@ export const pencas = {
           avatar: UsersTable.avatar,
           totalPoints: sql<number>`COALESCE(SUM(${WcPredictionsTable.points}), 0)`,
         })
-        .from(WcPredictionsTable)
-        .rightJoin(UsersTable, eq(WcPredictionsTable.userId, UsersTable.id))
+        .from(UsersTable)
+        .leftJoin(WcPredictionsTable, eq(UsersTable.id, WcPredictionsTable.userId))
         .groupBy(UsersTable.id, UsersTable.username, UsersTable.avatar)
         .orderBy(desc(sql`totalPoints`))
         .all();
