@@ -8,6 +8,13 @@
       "when": 1780627874629,
       "tag": "0000_smiling_gunslinger",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1780679490380,
+      "tag": "0001_oval_hitman",
+      "breakpoints": true
     }
   ]
 }

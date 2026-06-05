@@ -30,6 +30,7 @@ type LeaderboardEntry = {
   userId: number;
   username: string;
   avatar: string | null;
+  streak: number;
   totalPoints: number;
 };
 
@@ -118,6 +119,14 @@ export default function PencasApp({ session }: Props) {
                 ? `Bienvenido, ${session.user.username ?? session.user.name}`
                 : "Iniciá sesión para pronosticar"}
             </p>
+            {session?.user && leaderboard.length > 0 && (() => {
+              const me = leaderboard.find(e => e.userId === Number(session.user!.id));
+              return me && me.streak > 0 ? (
+                <div class="mt-2 flex items-center gap-1.5 text-xs text-gold font-semibold">
+                  <span>🔥 Racha de {me.streak} acierto{me.streak !== 1 ? "s" : ""}</span>
+                </div>
+              ) : null;
+            })()}
           </div>
           <div class="flex items-center gap-2">
             {session?.user?.is_admin && (

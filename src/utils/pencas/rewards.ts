@@ -18,6 +18,15 @@ export async function rewardExactScore(userId: number): Promise<void> {
     .run();
 }
 
+export function getStreakMilestoneBonus(streak: number): number {
+  if (streak === 3) return 3;
+  if (streak === 5) return 10;
+  if (streak === 10) return 25;
+  if (streak === 15) return 50;
+  if (streak >= 20 && streak % 5 === 0) return 25;
+  return 0;
+}
+
 export function getLeaderboardPrizes(position: number): number {
   if (position === 1) return 5000;
   if (position === 2) return 3000;

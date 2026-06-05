@@ -30,10 +30,11 @@ type Props = {
   match: Match;
   predictions: Prediction[];
   userPrediction: Prediction | null;
+  userStreak?: number;
   session: Session | null;
 };
 
-export default function MatchDetailView({ match, predictions: initialPredictions, userPrediction, session }: Props) {
+export default function MatchDetailView({ match, predictions: initialPredictions, userPrediction, userStreak = 0, session }: Props) {
   const [predictions, setPredictions] = useState<Prediction[]>(initialPredictions);
   const [myPrediction, setMyPrediction] = useState<Prediction | null>(userPrediction);
   const [submitting, setSubmitting] = useState(false);
@@ -158,7 +159,14 @@ export default function MatchDetailView({ match, predictions: initialPredictions
 
       {canPredict && (
         <div class="glass-card p-6">
-          <h3 class="font-barlow font-bold uppercase text-sm text-white mb-4">Tu pronóstico</h3>
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="font-barlow font-bold uppercase text-sm text-white">Tu pronóstico</h3>
+            {userStreak > 0 && (
+              <span class="inline-flex items-center gap-1 text-xs text-gold font-semibold">
+                <span>🔥</span> Racha de {userStreak}
+              </span>
+            )}
+          </div>
           <form onSubmit={handleSubmit} class="flex items-center gap-3">
             <input
               type="number"

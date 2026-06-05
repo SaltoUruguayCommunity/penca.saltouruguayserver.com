@@ -6,6 +6,7 @@ type LeaderboardEntry = {
   userId: number;
   username: string;
   avatar: string | null;
+  streak: number;
   totalPoints: number;
 };
 
@@ -38,6 +39,7 @@ export default function Leaderboard({ entries, session }: Props) {
           <tr class="bg-accent-subtle/50 text-muted text-[11px] uppercase tracking-[0.12em]">
             <th class="px-5 py-4 text-left font-semibold w-14">#</th>
             <th class="px-5 py-4 text-left font-semibold">Usuario</th>
+            <th class="px-5 py-4 text-center font-semibold">Racha</th>
             <th class="px-5 py-4 text-right font-semibold">Puntos</th>
           </tr>
         </thead>
@@ -89,6 +91,16 @@ export default function Leaderboard({ entries, session }: Props) {
                       )}
                     </div>
                   </div>
+                </td>
+                <td class="px-5 py-4 text-center">
+                  {entry.streak > 0 ? (
+                    <span class="inline-flex items-center gap-1 font-barlow font-bold text-sm tabular-nums text-gold" title="Racha de aciertos">
+                      <span>{entry.streak}</span>
+                      <span class="text-xs">🔥</span>
+                    </span>
+                  ) : (
+                    <span class="text-muted/40 text-xs">—</span>
+                  )}
                 </td>
                 <td class="px-5 py-4 text-right">
                   <span class="font-barlow font-black text-xl text-accent tabular-nums">

@@ -1,6 +1,6 @@
 import { ActionError, defineAction } from "astro:actions";
 import { z } from "astro:schema";
-import { and, desc, eq, lte, ne, sql } from "drizzle-orm";
+import { and, desc, eq, inArray, lte, ne, sql } from "drizzle-orm";
 import { getSession } from "auth-astro/server";
 import { client, turso } from "../db";
 import {
@@ -11,7 +11,7 @@ import {
   UsersTable,
 } from "../db/schema";
 import { calcPoints } from "../utils/pencas/scoring";
-import { rewardPrediction, rewardExactScore } from "../utils/pencas/rewards";
+import { rewardPrediction, rewardExactScore, getStreakMilestoneBonus } from "../utils/pencas/rewards";
 import { syncScoresFromApi } from "../utils/pencas/sync";
 import {
   fetchCompetitionStandings,
@@ -232,11 +232,12 @@ export const pencas = {
           userId: UsersTable.id,
           username: UsersTable.username,
           avatar: UsersTable.avatar,
+          streak: UsersTable.streak,
           totalPoints: sql<number>`COALESCE(SUM(${WcPredictionsTable.points}), 0)`,
         })
         .from(UsersTable)
         .leftJoin(WcPredictionsTable, eq(UsersTable.id, WcPredictionsTable.userId))
-        .groupBy(UsersTable.id, UsersTable.username, UsersTable.avatar)
+        .groupBy(UsersTable.id, UsersTable.username, UsersTable.avatar, UsersTable.streak)
         .orderBy(desc(sql`COALESCE(SUM(${WcPredictionsTable.points}), 0)`))
         .all();
 
@@ -245,6 +246,7 @@ export const pencas = {
         userId: r.userId,
         username: r.username,
         avatar: r.avatar,
+        streak: r.streak,
         totalPoints: Number(r.totalPoints),
       }));
     },
@@ -520,6 +522,12 @@ async function recalculateMatchPoints(matchId: number) {
     .where(eq(WcPredictionsTable.matchId, matchId))
     .all();
 
+  const userIds = [...new Set(predictions.map((p) => p.userId))];
+  const users = userIds.length > 0
+    ? await client.select().from(UsersTable).where(inArray(UsersTable.id, userIds)).all()
+    : [];
+  const userMap = new Map(users.map((u) => [u.id, u]));
+
   for (const pred of predictions) {
     const points = calcPoints(
       pred.homeScore,
@@ -536,6 +544,36 @@ async function recalculateMatchPoints(matchId: number) {
 
     if (points === 5) {
       await rewardExactScore(pred.userId);
+    }
+
+    // Streak logic
+    const user = userMap.get(pred.userId);
+    if (user) {
+      const prevStreak = user.streak;
+      const newStreak = points > 0 ? prevStreak + 1 : 0;
+      const newBestStreak = Math.max(user.bestStreak, newStreak);
+
+      await client
+        .update(UsersTable)
+        .set({
+          streak: newStreak,
+          bestStreak: newBestStreak,
+          lastPredictionAt: sql`(current_timestamp)`,
+        })
+        .where(eq(UsersTable.id, pred.userId))
+        .run();
+
+      // Milestone bonus on streak increments
+      if (newStreak > prevStreak) {
+        const bonus = getStreakMilestoneBonus(newStreak);
+        if (bonus > 0) {
+          await client
+            .update(UsersTable)
+            .set({ coins: sql`coins + ${bonus}` })
+            .where(eq(UsersTable.id, pred.userId))
+            .run();
+        }
+      }
     }
   }
 }

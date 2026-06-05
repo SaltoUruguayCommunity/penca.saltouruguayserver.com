@@ -50,6 +50,15 @@ const userPrediction = session?.user?.id
   ? allPredictions.find((p) => p.userId === session.user.id) ?? null
   : null;
 
+let userStreak = 0;
+if (session?.user?.id) {
+  const userData = await client.query.UsersTable.findFirst({
+    where: eq(UsersTable.id, Number(session.user.id)),
+    columns: { streak: true },
+  });
+  userStreak = userData?.streak ?? 0;
+}
+
 const matchDetail = {
   id: match.id,
   matchDate: match.matchDate,
@@ -76,7 +85,7 @@ const isFinished = match.status === "finished";
 const isLive = !isFinished && matchDate <= new Date();
 ---
 
-<Layout title={`${match.homeTeam.name} vs ${match.awayTeam.name} — Penca Mundial 2026`}>
+<Layout title={`${match.homeTeam.name} vs ${match.awayTeam.name}`} description={`Pronóstico del partido ${match.homeTeam.name} vs ${match.awayTeam.name} por ${STAGE_LABELS[match.stage] ?? match.stage} del Mundial 2026.`} image={match.homeTeam.flag ?? match.awayTeam.flag ?? "/og-default.png"}>
   <div class="min-h-screen">
     <!-- Ambient Background -->
     <div class="fixed inset-0 pointer-events-none overflow-hidden">
@@ -209,6 +218,7 @@ const isLive = !isFinished && matchDate <= new Date();
         match={matchDetail}
         predictions={allPredictions}
         userPrediction={userPrediction}
+        userStreak={userStreak}
         session={session}
       />
     </div>
