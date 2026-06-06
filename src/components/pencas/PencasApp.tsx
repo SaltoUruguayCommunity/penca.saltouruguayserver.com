@@ -114,7 +114,7 @@ export default function PencasApp({ session }: Props) {
             <h3 class="font-barlow font-bold uppercase text-xl text-gradient">
               Panel de pronósticos
             </h3>
-            <p class="text-muted text-sm mt-1">
+            <p class="text-muted text-base mt-1">
               {session?.user
                 ? `Bienvenido, ${session.user.username ?? session.user.name}`
                 : "Iniciá sesión para pronosticar"}
@@ -145,7 +145,7 @@ export default function PencasApp({ session }: Props) {
       <div class="flex gap-1 mb-6 border-b border-accent-border/20">
         <button
           onClick={() => setTab("groups")}
-          class={`relative px-5 py-3 text-sm font-barlow font-bold uppercase tracking-wider transition -mb-[1px] ${
+          class={`relative px-5 py-3 text-lg font-barlow font-bold uppercase tracking-wider transition -mb-[1px] ${
             tab === "groups"
               ? "text-accent"
               : "text-muted hover:text-white"
@@ -156,7 +156,7 @@ export default function PencasApp({ session }: Props) {
         </button>
         <button
           onClick={() => setTab("leaderboard")}
-          class={`relative px-5 py-3 text-sm font-barlow font-bold uppercase tracking-wider transition -mb-[1px] ${
+          class={`relative px-5 py-3 text-lg font-barlow font-bold uppercase tracking-wider transition -mb-[1px] ${
             tab === "leaderboard"
               ? "text-accent"
               : "text-muted hover:text-white"

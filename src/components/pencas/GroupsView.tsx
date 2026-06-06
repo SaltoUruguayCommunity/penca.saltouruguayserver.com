@@ -78,7 +78,7 @@ export default function GroupsView({ groups, predictions, session, onSubmit, sub
               {group.teams.map((team) => (
                 <span key={team.id} class="inline-block" title={team.name}>
                   {team.flag ? (
-                    <img src={team.flag} alt="" class="h-5 w-5 object-contain" />
+                    <img src={team.flag} alt="" class="h-11 w-11 object-contain" />
                   ) : (
                     <span class="text-[10px] font-bold text-muted uppercase px-1.5 py-0.5 rounded bg-zinc-800/50">
                       {team.fifaCode ?? team.name.slice(0, 3)}
