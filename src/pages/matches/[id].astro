@@ -47,7 +47,7 @@ const allPredictions = await client
 const session = await getSession(Astro.request);
 
 const userPrediction = session?.user?.id
-  ? allPredictions.find((p) => p.userId === session.user.id) ?? null
+  ? (allPredictions.find((p) => p.userId === session.user.id) ?? null)
   : null;
 
 let userStreak = 0;
@@ -85,31 +85,66 @@ const isFinished = match.status === "finished";
 const isLive = !isFinished && matchDate <= new Date();
 ---
 
-<Layout title={`${match.homeTeam.name} vs ${match.awayTeam.name}`} description={`Pronóstico del partido ${match.homeTeam.name} vs ${match.awayTeam.name} por ${STAGE_LABELS[match.stage] ?? match.stage} del Mundial 2026.`} image={match.homeTeam.flag ?? match.awayTeam.flag ?? undefined}>
+<Layout
+  title={`${match.homeTeam.name} vs ${match.awayTeam.name}`}
+  description={`Pronóstico del partido ${match.homeTeam.name} vs ${match.awayTeam.name} por ${STAGE_LABELS[match.stage] ?? match.stage} del Mundial 2026.`}
+  image={match.homeTeam.flag ?? match.awayTeam.flag ?? undefined}
+>
   <div class="min-h-screen">
     <!-- Ambient Background -->
     <div class="fixed inset-0 pointer-events-none overflow-hidden">
-      <div class="bokeh-dot w-[500px] h-[500px] bg-accent/10 top-1/4 left-1/4 -translate-x-1/2 -translate-y-1/2" />
-      <div class="bokeh-dot w-[300px] h-[300px] bg-gold/5 bottom-1/4 right-1/4 translate-x-1/2 translate-y-1/2" />
-      <div class="absolute inset-0" style="background: repeating-linear-gradient(0deg, transparent, transparent 1px, rgba(255,255,255,0.015) 1px, rgba(255,255,255,0.015) 2px), repeating-linear-gradient(90deg, transparent, transparent 1px, rgba(255,255,255,0.015) 1px, rgba(255,255,255,0.015) 2px);"></div>
+      <div
+        class="bokeh-dot w-[500px] h-[500px] bg-accent/10 top-1/4 left-1/4 -translate-x-1/2 -translate-y-1/2"
+      >
+      </div>
+      <div
+        class="bokeh-dot w-[300px] h-[300px] bg-gold/5 bottom-1/4 right-1/4 translate-x-1/2 translate-y-1/2"
+      >
+      </div>
+      <div
+        class="absolute inset-0"
+        style="background: repeating-linear-gradient(0deg, transparent, transparent 1px, rgba(255,255,255,0.015) 1px, rgba(255,255,255,0.015) 2px), repeating-linear-gradient(90deg, transparent, transparent 1px, rgba(255,255,255,0.015) 1px, rgba(255,255,255,0.015) 2px);"
+      >
+      </div>
     </div>
 
-    <nav id="navbar" class="fixed top-0 left-0 right-0 z-50 bg-surface/80 backdrop-blur-xl border-b border-accent-border/30 transition-shadow duration-300">
-    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between h-16">
-      <a href="/" class="flex items-center gap-2 font-barlow font-black tracking-tight group">
-  <img
-    src="/images/logo_salto.webp"
-    alt="SaltoUruguayServer"
-    class="h-13 w-auto object-contain transition-transform duration-300 group-hover:scale-110"
-  />
-  <div class="flex flex-col leading-none">
-    <span class="text-5xl"><span class="text-white">LA </span><span class="text-accent">PENCA</span></span>
-    <span class="text-[0.7rem] uppercase tracking-[0.2em] text-white/50 font-mono">de SaltoUruguayServer</span>
-  </div>
-</a>
+    <nav
+      id="navbar"
+      class="fixed top-0 left-0 right-0 z-50 bg-surface/80 backdrop-blur-xl border-b border-accent-border/30 transition-shadow duration-300"
+    >
+      <div
+        class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between h-16"
+      >
+        <a
+          href="/"
+          class="flex items-center gap-x-4 font-barlow font-black tracking-tight group"
+        >
+          <img
+            src="/images/logo_salto.webp"
+            alt="SaltoUruguayServer"
+            class="h-10 w-auto object-contain transition-transform duration-300 group-hover:scale-110"
+          />
+          <div class="flex flex-col leading-none">
+            <span class="text-2xl md:text-4xl"
+              ><span class="text-white">LA </span><span class="text-accent"
+                >PENCA</span
+              ></span
+            >
+            <span
+              class="text-[0.7rem] uppercase tracking-[0.2em] text-white/50 font-mono"
+              >de SaltoUruguayServer</span
+            >
+          </div>
+        </a>
         <div class="ml-auto flex items-center gap-3">
-          <a href="/pronosticos" class="text-xs font-semibold uppercase tracking-wider text-muted hover:text-white transition font-teko group">
-            <span class="inline-block transition-transform duration-200 group-hover:-translate-x-1">←</span> Volver
+          <a
+            href="/pronosticos"
+            class="text-xs font-semibold uppercase tracking-wider text-muted hover:text-white transition font-teko group"
+          >
+            <span
+              class="inline-block transition-transform duration-200 group-hover:-translate-x-1"
+              >←</span
+            > Volver
           </a>
         </div>
       </div>
@@ -119,8 +154,14 @@ const isLive = !isFinished && matchDate <= new Date();
       <div class="glass-card p-6 sm:p-8 mb-6 glow-violet">
         <div class="flex items-center justify-between mb-6">
           <div class="flex items-center gap-3">
-            <span data-time={match.matchDate} data-format="full" class="text-sm text-muted font-semibold uppercase tracking-wider"></span>
-            <span class="text-xs text-muted/50 font-semibold uppercase tracking-wider">
+            <span
+              data-time={match.matchDate}
+              data-format="full"
+              class="text-sm text-muted font-semibold uppercase tracking-wider"
+            ></span>
+            <span
+              class="text-xs text-muted/50 font-semibold uppercase tracking-wider"
+            >
               {STAGE_LABELS[match.stage] ?? match.stage}
             </span>
           </div>
@@ -137,86 +178,118 @@ const isLive = !isFinished && matchDate <= new Date();
           </span>
         </div>
 
-        {match.group && (
-          <div class="text-xs text-muted/60 font-semibold uppercase tracking-wider mb-4">
-            Grupo {match.group.name}
-          </div>
-        )}
+        {
+          match.group && (
+            <div class="text-xs text-muted/60 font-semibold uppercase tracking-wider mb-4">
+              Grupo {match.group.name}
+            </div>
+          )
+        }
 
         <div class="flex items-center justify-center gap-6 sm:gap-12 py-6">
           <div class="flex flex-col items-center gap-3 flex-1">
-            {match.homeTeam.flag ? (
-              <img src={match.homeTeam.flag} alt="" class="h-16 w-16 sm:h-20 sm:w-20 object-contain" />
-            ) : (
-              <div class="h-16 w-16 rounded-full bg-zinc-800 flex items-center justify-center text-2xl">⚽</div>
-            )}
-            <span class="font-barlow font-bold text-lg sm:text-xl text-white text-center">
+            {
+              match.homeTeam.flag ? (
+                <img
+                  src={match.homeTeam.flag}
+                  alt=""
+                  class="h-16 w-16 sm:h-20 sm:w-20 object-contain"
+                />
+              ) : (
+                <div class="h-16 w-16 rounded-full bg-zinc-800 flex items-center justify-center text-2xl">
+                  ⚽
+                </div>
+              )
+            }
+            <span
+              class="font-barlow font-bold text-lg sm:text-xl text-white text-center"
+            >
               {match.homeTeam.name}
             </span>
           </div>
 
           <div class="flex flex-col items-center gap-2 shrink-0">
-            {isFinished || isLive ? (
-              <div class="flex items-center gap-4">
-                <span class="font-barlow font-black text-4xl sm:text-5xl text-white tabular-nums drop-shadow-[0_0_15px_rgba(139,92,246,0.15)]">
-                  {match.homeScore ?? "-"}
-                </span>
-                <span class="text-accent/40 font-bold text-3xl">-</span>
-                <span class="font-barlow font-black text-4xl sm:text-5xl text-white tabular-nums drop-shadow-[0_0_15px_rgba(139,92,246,0.15)]">
-                  {match.awayScore ?? "-"}
-                </span>
-              </div>
-            ) : (
-              <div class="text-center">
-                <span class="font-barlow font-black text-3xl text-muted">vs</span>
-              </div>
-            )}
-            {isFinished && (
-              <div class="text-[11px] text-muted uppercase tracking-wider font-semibold">
-                {match.homeScore !== null && match.awayScore !== null
-                  ? match.homeScore > match.awayScore
-                    ? `Ganó ${match.homeTeam.name}`
-                    : match.homeScore < match.awayScore
-                      ? `Ganó ${match.awayTeam.name}`
-                      : "Empate"
-                  : ""}
-              </div>
-            )}
+            {
+              isFinished || isLive ? (
+                <div class="flex items-center gap-4">
+                  <span class="font-barlow font-black text-4xl sm:text-5xl text-white tabular-nums drop-shadow-[0_0_15px_rgba(139,92,246,0.15)]">
+                    {match.homeScore ?? "-"}
+                  </span>
+                  <span class="text-accent/40 font-bold text-3xl">-</span>
+                  <span class="font-barlow font-black text-4xl sm:text-5xl text-white tabular-nums drop-shadow-[0_0_15px_rgba(139,92,246,0.15)]">
+                    {match.awayScore ?? "-"}
+                  </span>
+                </div>
+              ) : (
+                <div class="text-center">
+                  <span class="font-barlow font-black text-3xl text-muted">
+                    vs
+                  </span>
+                </div>
+              )
+            }
+            {
+              isFinished && (
+                <div class="text-[11px] text-muted uppercase tracking-wider font-semibold">
+                  {match.homeScore !== null && match.awayScore !== null
+                    ? match.homeScore > match.awayScore
+                      ? `Ganó ${match.homeTeam.name}`
+                      : match.homeScore < match.awayScore
+                        ? `Ganó ${match.awayTeam.name}`
+                        : "Empate"
+                    : ""}
+                </div>
+              )
+            }
           </div>
 
           <div class="flex flex-col items-center gap-3 flex-1">
-            {match.awayTeam.flag ? (
-              <img src={match.awayTeam.flag} alt="" class="h-16 w-16 sm:h-20 sm:w-20 object-contain" />
-            ) : (
-              <div class="h-16 w-16 rounded-full bg-zinc-800 flex items-center justify-center text-2xl">⚽</div>
-            )}
-            <span class="font-barlow font-bold text-lg sm:text-xl text-white text-center">
+            {
+              match.awayTeam.flag ? (
+                <img
+                  src={match.awayTeam.flag}
+                  alt=""
+                  class="h-16 w-16 sm:h-20 sm:w-20 object-contain"
+                />
+              ) : (
+                <div class="h-16 w-16 rounded-full bg-zinc-800 flex items-center justify-center text-2xl">
+                  ⚽
+                </div>
+              )
+            }
+            <span
+              class="font-barlow font-bold text-lg sm:text-xl text-white text-center"
+            >
               {match.awayTeam.name}
             </span>
           </div>
         </div>
 
-        {userPrediction && isFinished && (
-          <div class="mt-6 pt-4 border-t border-accent-border/20 text-center">
-            <div class="inline-flex items-center gap-3 px-4 py-2 rounded-lg bg-accent-subtle/40">
-              <span class="text-xs text-muted uppercase tracking-wider font-semibold">Tu pronóstico:</span>
-              <span class="font-barlow font-bold text-lg text-white tabular-nums">
-                {userPrediction.homeScore} - {userPrediction.awayScore}
-              </span>
-              <span
-                class={`badge-pill ${
-                  userPrediction.points && userPrediction.points > 0
-                    ? "!bg-green-accent/15 !text-green-accent"
-                    : "!bg-zinc-800 !text-zinc-500"
-                }`}
-              >
-                {userPrediction.points != null
-                  ? `${userPrediction.points} pts`
-                  : "Pendiente"}
-              </span>
+        {
+          userPrediction && isFinished && (
+            <div class="mt-6 pt-4 border-t border-accent-border/20 text-center">
+              <div class="inline-flex items-center gap-3 px-4 py-2 rounded-lg bg-accent-subtle/40">
+                <span class="text-xs text-muted uppercase tracking-wider font-semibold">
+                  Tu pronóstico:
+                </span>
+                <span class="font-barlow font-bold text-lg text-white tabular-nums">
+                  {userPrediction.homeScore} - {userPrediction.awayScore}
+                </span>
+                <span
+                  class={`badge-pill ${
+                    userPrediction.points && userPrediction.points > 0
+                      ? "!bg-green-accent/15 !text-green-accent"
+                      : "!bg-zinc-800 !text-zinc-500"
+                  }`}
+                >
+                  {userPrediction.points != null
+                    ? `${userPrediction.points} pts`
+                    : "Pendiente"}
+                </span>
+              </div>
             </div>
-          </div>
-        )}
+          )
+        }
       </div>
 
       <MatchDetailView
@@ -230,21 +303,60 @@ const isLive = !isFinished && matchDate <= new Date();
     </div>
 
     <!-- Footer -->
-    <footer class="relative border-t border-white/10 bg-[#050505] py-10 overflow-hidden">
-      <div class="absolute bottom-0 left-1/2 -translate-x-1/2 w-[600px] h-[200px] rounded-full pointer-events-none" style="background: rgba(139,92,246,0.05); filter: blur(80px);"></div>
+    <footer
+      class="relative border-t border-white/10 bg-[#050505] py-10 overflow-hidden"
+    >
+      <div
+        class="absolute bottom-0 left-1/2 -translate-x-1/2 w-[600px] h-[200px] rounded-full pointer-events-none"
+        style="background: rgba(139,92,246,0.05); filter: blur(80px);"
+      >
+      </div>
       <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-        <div class="flex flex-col md:flex-row items-center justify-between gap-6">
-          <a href="/" class="flex items-center gap-2 font-barlow font-black text-lg group">
-            <span class="text-accent transition-transform duration-300 group-hover:scale-110">⚽</span>
+        <div
+          class="flex flex-col md:flex-row items-center justify-between gap-6"
+        >
+          <a
+            href="/"
+            class="flex items-center gap-2 font-barlow font-black text-lg group"
+          >
+            <span
+              class="text-accent transition-transform duration-300 group-hover:scale-110"
+              >⚽</span
+            >
             <span class="text-white">LA</span>
             <span class="text-accent">PENCA</span>
           </a>
           <div class="flex items-center gap-6">
-            <a href="https://instagram.com/saltouruguayserver" target="_blank" rel="noopener noreferrer" class="text-white/40 hover:text-accent transition text-xs uppercase tracking-wider">Instagram</a>
-            <a href="https://discord.gg/XwHSRRwnzS" target="_blank" rel="noopener noreferrer" class="text-white/40 hover:text-accent transition text-xs uppercase tracking-wider">Discord</a>
-            <a href="https://twitch.tv/saltouruguayserver" target="_blank" rel="noopener noreferrer" class="text-white/40 hover:text-accent transition text-xs uppercase tracking-wider">Twitch</a>
+            <a
+              href="https://instagram.com/saltouruguayserver"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="text-white/40 hover:text-accent transition text-xs uppercase tracking-wider"
+              >Instagram</a
+            >
+            <a
+              href="https://discord.gg/XwHSRRwnzS"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="text-white/40 hover:text-accent transition text-xs uppercase tracking-wider"
+              >Discord</a
+            >
+            <a
+              href="https://twitch.tv/saltouruguayserver"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="text-white/40 hover:text-accent transition text-xs uppercase tracking-wider"
+              >Twitch</a
+            >
           </div>
-          <p class="text-white/30 text-xs font-mono">&copy; {new Date().getFullYear()} Desarrollado por <a href="https://instagram.com/alexitoo_uy" target="_blank" rel="noopener noreferrer" class="text-white/60 hover:text-accent transition">Alexitoo_UY</a></p>
+          <p class="text-white/30 text-xs font-mono">
+            &copy; {new Date().getFullYear()} Desarrollado por <a
+              href="https://instagram.com/alexitoo_uy"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="text-white/60 hover:text-accent transition">Alexitoo_UY</a
+            >
+          </p>
         </div>
       </div>
     </footer>
