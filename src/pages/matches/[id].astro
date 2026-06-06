@@ -95,12 +95,18 @@ const isLive = !isFinished && matchDate <= new Date();
     </div>
 
     <nav id="navbar" class="fixed top-0 left-0 right-0 z-50 bg-surface/80 backdrop-blur-xl border-b border-accent-border/30 transition-shadow duration-300">
-      <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center h-16">
-        <a href="/pronosticos" class="flex items-center gap-2 font-barlow font-black text-lg tracking-tight group">
-          <span class="text-accent transition-transform duration-300 group-hover:scale-110">⚽</span>
-          <span class="text-white">LA</span>
-          <span class="text-accent">PENCA</span>
-        </a>
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between h-16">
+      <a href="/" class="flex items-center gap-2 font-barlow font-black tracking-tight group">
+  <img
+    src="/images/logo_salto.webp"
+    alt="SaltoUruguayServer"
+    class="h-13 w-auto object-contain transition-transform duration-300 group-hover:scale-110"
+  />
+  <div class="flex flex-col leading-none">
+    <span class="text-5xl"><span class="text-white">LA </span><span class="text-accent">PENCA</span></span>
+    <span class="text-[0.7rem] uppercase tracking-[0.2em] text-white/50 font-mono">de SaltoUruguayServer</span>
+  </div>
+</a>
         <div class="ml-auto flex items-center gap-3">
           <a href="/pronosticos" class="text-xs font-semibold uppercase tracking-wider text-muted hover:text-white transition font-teko group">
             <span class="inline-block transition-transform duration-200 group-hover:-translate-x-1">←</span> Volver
