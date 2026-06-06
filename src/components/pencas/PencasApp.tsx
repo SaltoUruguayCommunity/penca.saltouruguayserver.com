@@ -5,7 +5,7 @@ import { actions } from "astro:actions";
 import GroupsView from "./GroupsView";
 import Leaderboard from "./Leaderboard";
 import LoginButton from "./LoginButton";
-import LiveMatches from "./LiveMatches";
+import RecentMatches from "./RecentMatches";
 
 type Group = {
   id: number;
@@ -139,7 +139,7 @@ export default function PencasApp({ session }: Props) {
         </div>
       </div>
 
-      <LiveMatches />
+      <RecentMatches />
 
       {/* Tabs */}
       <div class="flex gap-1 mb-6 border-b border-accent-border/20">

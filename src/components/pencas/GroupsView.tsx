@@ -1,7 +1,8 @@
-import { useState } from "preact/hooks";
-import { ChevronDown, Trophy } from "lucide-preact";
+import { useState, useMemo } from "preact/hooks";
+import { Trophy } from "lucide-preact";
 import type { Session } from "@auth/core/types";
 import MatchCard from "./MatchCard";
+import GroupStandings from "./GroupStandings";
 
 type Group = {
   id: number;
@@ -29,17 +30,31 @@ type Props = {
   submitting: boolean;
 };
 
-export default function GroupsView({ groups, predictions, session, onSubmit, submitting }: Props) {
-  const [openGroups, setOpenGroups] = useState<Set<string>>(new Set(groups.map((g) => g.name)));
-
-  function toggleGroup(name: string) {
-    setOpenGroups((prev) => {
-      const next = new Set(prev);
-      if (next.has(name)) next.delete(name);
-      else next.add(name);
-      return next;
-    });
+// Group matches by fecha (round)
+function groupByFecha(matches: Group["matches"]) {
+  const fechas: Record<number, Group["matches"]> = {};
+  const sorted = [...matches].sort(
+    (a, b) => new Date(a.matchDate).getTime() - new Date(b.matchDate).getTime()
+  );
+  // Assign round number by matchDate order within group (each pair = 1 fecha)
+  const uniqueDates = [...new Set(sorted.map((m) => m.matchDate.split("T")[0]))];
+  for (const m of sorted) {
+    const dateKey = m.matchDate.split("T")[0];
+    const round = uniqueDates.indexOf(dateKey) + 1;
+    if (!fechas[round]) fechas[round] = [];
+    fechas[round].push(m);
   }
+  return fechas;
+}
+
+export default function GroupsView({ groups, predictions, session, onSubmit, submitting }: Props) {
+  const [activeGroup, setActiveGroup] = useState<string>(groups[0]?.name ?? "A");
+
+  const currentGroup = groups.find((g) => g.name === activeGroup);
+  const fechas = useMemo(
+    () => (currentGroup ? groupByFecha(currentGroup.matches) : {}),
+    [currentGroup]
+  );
 
   if (groups.length === 0) {
     return (
@@ -54,68 +69,79 @@ export default function GroupsView({ groups, predictions, session, onSubmit, sub
   }
 
   return (
-    <div class="space-y-3">
-      {groups.map((group) => (
-        <div key={group.name} class={`glass-card overflow-hidden transition-all duration-300 ${openGroups.has(group.name) ? 'glow-violet' : 'hover:shadow-[0_0_20px_rgba(139,92,246,0.06)]'}`}>
+    <div class="space-y-4">
+      {/* Group tabs */}
+      <div class="glass-card p-1.5 flex flex-wrap gap-1">
+        {groups.map((g) => (
           <button
-            onClick={() => toggleGroup(group.name)}
-            class="w-full flex items-center justify-between gap-3 px-5 py-4 text-left hover:bg-accent-subtle/50 transition"
+            key={g.name}
+            onClick={() => setActiveGroup(g.name)}
+            class={`relative px-3 py-2 rounded-md text-sm font-barlow font-bold uppercase tracking-wider transition-all duration-200 flex items-center gap-2 ${
+              activeGroup === g.name
+                ? "bg-accent text-white shadow-[0_0_20px_rgba(139,92,246,0.4)]"
+                : "text-muted hover:text-white hover:bg-accent-subtle/40"
+            }`}
           >
-            <div class="flex items-center gap-3">
-              <ChevronDown
-                class={`h-4 w-4 text-accent transition-transform duration-200 ${openGroups.has(group.name) ? "rotate-0" : "-rotate-90"
-                  }`}
-              />
-              <span class="font-barlow font-bold uppercase text-base text-white tracking-wide">
-                Grupo {group.name}
-              </span>
-              <span class="text-[11px] text-muted font-semibold uppercase tracking-wider hidden sm:inline">
-                {group.teams.length} equipos &middot; {group.matches.length} partidos
-              </span>
-            </div>
-            <div class="flex items-center gap-1.5">
-              {group.teams.map((team) => (
-                <span key={team.id} class="inline-block" title={team.name}>
-                  {team.flag ? (
-                    <div class="w-8 aspect-[3/2]">
-                      <img
-                        src={team.flag}
-                        alt=""
-                        class="w-full h-full object-cover"
-                      />
-                    </div>) : (
-                    <span class="text-[10px] font-bold text-muted uppercase px-1.5 py-0.5 rounded bg-zinc-800/50">
-                      {team.fifaCode ?? team.name.slice(0, 3)}
-                    </span>
-                  )}
-                </span>
-              ))}
-            </div>
-          </button>
-
-          {openGroups.has(group.name) && (
-            <div class="border-t border-accent-border/20 p-4 sm:p-5 space-y-3 animate-scale-in">
-              {group.matches.length === 0 ? (
-                <div class="text-center py-8">
-                  <p class="text-muted/50 text-sm">Sin partidos disponibles.</p>
-                  <p class="text-muted/30 text-[11px] mt-1">La competencia no ha comenzado</p>
-                </div>
-              ) : (
-                group.matches.map((match) => (
-                  <MatchCard
-                    key={match.id}
-                    match={match}
-                    prediction={predictions[match.id] ?? null}
-                    session={session}
-                    onSubmit={onSubmit}
-                    submitting={submitting}
-                  />
-                ))
+            <span>Grupo {g.name}</span>
+            {/* Tiny flags */}
+            <span class="hidden sm:flex items-center gap-0.5">
+              {g.teams.slice(0, 2).map((t) =>
+                t.flag ? (
+                  <img key={t.id} src={t.flag} alt="" class="w-4 h-3 object-cover opacity-70" />
+                ) : null
               )}
-            </div>
-          )}
+            </span>
+          </button>
+        ))}
+      </div>
+
+      {/* Main content: matches + standings */}
+      {currentGroup && (
+        <div class="grid grid-cols-1 lg:grid-cols-[1fr_280px] gap-4 items-start">
+          {/* Matches by fecha */}
+          <div class="space-y-5">
+            {Object.entries(fechas).map(([fechaNum, matches]) => (
+              <div key={fechaNum}>
+                {/* Fecha header */}
+                <div class="flex items-center gap-3 mb-3">
+                  <span class="font-barlow font-black uppercase text-xs tracking-[0.2em] text-accent">
+                    Fecha {fechaNum}
+                  </span>
+                  <span class="text-muted/40 text-xs">{matches.length} partido{matches.length !== 1 ? "s" : ""}</span>
+                  <div class="flex-1 h-px bg-accent-border/20" />
+                </div>
+
+                {/* Match cards grid: 2 columns on md+ */}
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  {matches.map((match) => (
+                    <MatchCard
+                      key={match.id}
+                      match={match}
+                      prediction={predictions[match.id] ?? null}
+                      session={session}
+                      onSubmit={onSubmit}
+                      submitting={submitting}
+                    />
+                  ))}
+                </div>
+              </div>
+            ))}
+
+            {currentGroup.matches.length === 0 && (
+              <div class="glass-card p-10 text-center">
+                <p class="text-muted/50 text-sm">Sin partidos para este grupo.</p>
+              </div>
+            )}
+          </div>
+
+          {/* Standings sidebar */}
+          <GroupStandings
+            groupName={currentGroup.name}
+            teams={currentGroup.teams}
+            matches={currentGroup.matches}
+          />
         </div>
-      ))}
+      )}
     </div>
   );
 }
