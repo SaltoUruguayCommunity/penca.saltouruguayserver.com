@@ -6,39 +6,76 @@ import PencasApp from "../components/pencas/PencasApp.tsx";
 const session = await getSession(Astro.request);
 ---
 
-<Layout title="Pronosticos" description="Tus pronósticos para la Penca Mundial 2026 — ingresá resultados, acumulá puntos y seguí el ranking.">
+<Layout
+  title="Pronosticos"
+  description="Tus pronósticos para la Penca Mundial 2026 — ingresá resultados, acumulá puntos y seguí el ranking."
+>
   <div class="min-h-screen">
     <!-- Ambient Background -->
     <div class="fixed inset-0 pointer-events-none overflow-hidden">
-      <div class="bokeh-dot w-[500px] h-[500px] bg-accent/10 top-0 left-0 -translate-x-1/3 -translate-y-1/3" />
-      <div class="bokeh-dot w-[300px] h-[300px] bg-gold/5 bottom-0 right-0 translate-x-1/3 translate-y-1/3" />
-      <div class="absolute inset-0" style="background: repeating-linear-gradient(0deg, transparent, transparent 1px, rgba(255,255,255,0.015) 1px, rgba(255,255,255,0.015) 2px), repeating-linear-gradient(90deg, transparent, transparent 1px, rgba(255,255,255,0.015) 1px, rgba(255,255,255,0.015) 2px);"></div>
+      <div
+        class="bokeh-dot w-[500px] h-[500px] bg-accent/10 top-0 left-0 -translate-x-1/3 -translate-y-1/3"
+      >
+      </div>
+      <div
+        class="bokeh-dot w-[300px] h-[300px] bg-gold/5 bottom-0 right-0 translate-x-1/3 translate-y-1/3"
+      >
+      </div>
+      <div
+        class="absolute inset-0"
+        style="background: repeating-linear-gradient(0deg, transparent, transparent 1px, rgba(255,255,255,0.015) 1px, rgba(255,255,255,0.015) 2px), repeating-linear-gradient(90deg, transparent, transparent 1px, rgba(255,255,255,0.015) 1px, rgba(255,255,255,0.015) 2px);"
+      >
+      </div>
     </div>
 
-    <nav id="navbar" class="fixed top-0 left-0 right-0 z-50 bg-surface/80 backdrop-blur-xl border-b border-accent-border/30 transition-shadow duration-300">
-      <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center h-16">
-        <a href="/" class="flex items-center gap-2 font-barlow font-black tracking-tight group">
-  <img
-    src="/images/logo_salto.webp"
-    alt="SaltoUruguayServer"
-    class="h-13 w-auto object-contain transition-transform duration-300 group-hover:scale-110"
-  />
-  <div class="flex flex-col leading-none">
-    <span class="text-5xl"><span class="text-white">LA </span><span class="text-accent">PENCA</span></span>
-    <span class="text-[0.7rem] uppercase tracking-[0.2em] text-white/50 font-mono">de SaltoUruguayServer</span>
-  </div>
-</a>
+    <nav
+      id="navbar"
+      class="fixed top-0 left-0 right-0 z-50 bg-surface/80 backdrop-blur-xl border-b border-accent-border/30 transition-shadow duration-300"
+    >
+      <div
+        class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center h-16"
+      >
+        <a
+          href="/"
+          class="flex items-center gap-x-4 font-barlow font-black tracking-tight group"
+        >
+          <img
+            src="/images/logo_salto.webp"
+            alt="SaltoUruguayServer"
+            class="h-10 w-auto object-contain transition-transform duration-300 group-hover:scale-110"
+          />
+          <div class="flex flex-col leading-none">
+            <span class="text-2xl md:text-4xl"
+              ><span class="text-white">LA </span><span class="text-accent"
+                >PENCA</span
+              ></span
+            >
+            <span
+              class="text-[0.6rem] uppercase tracking-[0.2em] text-white/50 font-mono"
+              >SaltoUruguayServer</span
+            >
+          </div>
+        </a>
 
         <div class="ml-auto flex items-center gap-6">
-  <a href="https://www.saltouruguayserver.com" target="_blank" rel="noopener noreferrer" class="relative text-base font-semibold uppercase tracking-wider text-muted hover:text-white transition font-teko group">
-    Inicio
-    <span class="absolute -bottom-1 left-0 w-0 h-[1.5px] bg-accent transition-all duration-300 group-hover:w-full"></span>
-  </a>
-  <a href="/pronosticos" class="relative text-base font-semibold uppercase tracking-wider text-accent transition font-teko group">
-    Pronosticos
-    <span class="absolute -bottom-1 left-0 w-full h-[1.5px] bg-accent"></span>
-  </a>
-</div>
+          <a
+            href="/"
+            class="relative text-base font-semibold uppercase tracking-wider text-muted hover:text-white transition font-teko group"
+          >
+            Inicio
+            <span
+              class="absolute -bottom-1 left-0 w-0 h-[1.5px] bg-accent transition-all duration-300 group-hover:w-full"
+            ></span>
+          </a>
+          <a
+            href="/pronosticos"
+            class="relative text-base font-semibold uppercase tracking-wider text-accent transition font-teko group"
+          >
+            Pronosticos
+            <span class="absolute -bottom-1 left-0 w-full h-[1.5px] bg-accent"
+            ></span>
+          </a>
+        </div>
       </div>
     </nav>
 
@@ -47,21 +84,60 @@ const session = await getSession(Astro.request);
     </div>
 
     <!-- Footer -->
-    <footer class="relative border-t border-white/10 bg-[#050505] py-10 overflow-hidden">
-      <div class="absolute bottom-0 left-1/2 -translate-x-1/2 w-[600px] h-[200px] rounded-full pointer-events-none" style="background: rgba(139,92,246,0.05); filter: blur(80px);"></div>
+    <footer
+      class="relative border-t border-white/10 bg-[#050505] py-10 overflow-hidden"
+    >
+      <div
+        class="absolute bottom-0 left-1/2 -translate-x-1/2 w-[600px] h-[200px] rounded-full pointer-events-none"
+        style="background: rgba(139,92,246,0.05); filter: blur(80px);"
+      >
+      </div>
       <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-        <div class="flex flex-col md:flex-row items-center justify-between gap-6">
-          <a href="/" class="flex items-center gap-2 font-barlow font-black text-lg group">
-            <span class="text-accent transition-transform duration-300 group-hover:scale-110">⚽</span>
+        <div
+          class="flex flex-col md:flex-row items-center justify-between gap-6"
+        >
+          <a
+            href="/"
+            class="flex items-center gap-2 font-barlow font-black text-lg group"
+          >
+            <span
+              class="text-accent transition-transform duration-300 group-hover:scale-110"
+              >⚽</span
+            >
             <span class="text-white">LA</span>
             <span class="text-accent">PENCA</span>
           </a>
           <div class="flex items-center gap-6">
-            <a href="https://instagram.com/saltouruguayserver" target="_blank" rel="noopener noreferrer" class="text-white/40 hover:text-accent transition text-xs uppercase tracking-wider">Instagram</a>
-            <a href="https://discord.gg/XwHSRRwnzS" target="_blank" rel="noopener noreferrer" class="text-white/40 hover:text-accent transition text-xs uppercase tracking-wider">Discord</a>
-            <a href="https://twitch.tv/saltouruguayserver" target="_blank" rel="noopener noreferrer" class="text-white/40 hover:text-accent transition text-xs uppercase tracking-wider">Twitch</a>
+            <a
+              href="https://instagram.com/saltouruguayserver"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="text-white/40 hover:text-accent transition text-xs uppercase tracking-wider"
+              >Instagram</a
+            >
+            <a
+              href="https://discord.gg/XwHSRRwnzS"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="text-white/40 hover:text-accent transition text-xs uppercase tracking-wider"
+              >Discord</a
+            >
+            <a
+              href="https://twitch.tv/saltouruguayserver"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="text-white/40 hover:text-accent transition text-xs uppercase tracking-wider"
+              >Twitch</a
+            >
           </div>
-          <p class="text-white/30 text-xs font-mono">&copy; {new Date().getFullYear()} Desarrollado por <a href="https://instagram.com/alexitoo_uy" target="_blank" rel="noopener noreferrer" class="text-white/60 hover:text-accent transition">Alexitoo_UY</a></p>
+          <p class="text-white/30 text-xs font-mono">
+            &copy; {new Date().getFullYear()} Desarrollado por <a
+              href="https://instagram.com/alexitoo_uy"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="text-white/60 hover:text-accent transition">Alexitoo_UY</a
+            >
+          </p>
         </div>
       </div>
     </footer>
