@@ -55,7 +55,7 @@ export default function LoginButton({ session }: Props) {
             </p>
             {typeof session.user.coins === "number" && (
               <p class="text-[11px] text-gold font-semibold uppercase tracking-wider drop-shadow-[0_0_10px_rgba(250,204,21,0.15)]">
-                ★ {session.user.coins} monedas
+                ★ {session.user.coins} puntos
               </p>
             )}
           </div>

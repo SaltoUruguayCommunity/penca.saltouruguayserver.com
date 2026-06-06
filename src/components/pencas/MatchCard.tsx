@@ -63,13 +63,12 @@ export default function MatchCard({ match, prediction, session, onSubmit, submit
           </span>
         </div>
         <span
-          class={`badge-pill ${
-            isLive
-              ? "!bg-green-accent/15 !text-green-accent animate-glow-pulse"
-              : isFinished
-                ? "!bg-zinc-800 !text-zinc-400"
-                : "!bg-accent/10 !text-accent-light"
-          }`}
+          class={`badge-pill ${isLive
+            ? "!bg-green-accent/15 !text-green-accent animate-glow-pulse"
+            : isFinished
+              ? "!bg-zinc-800 !text-zinc-400"
+              : "!bg-accent/10 !text-accent-light"
+            }`}
         >
           {isLive ? "EN VIVO" : isFinished ? "Finalizado" : "Programado"}
         </span>
@@ -80,7 +79,13 @@ export default function MatchCard({ match, prediction, session, onSubmit, submit
         {/* Home team */}
         <div class="flex items-center gap-2.5 flex-1 min-w-0">
           {match.homeTeam.flag ? (
-            <img src={match.homeTeam.flag} alt="" class="h-7 w-7 object-contain shrink-0" />
+            <div class="w-8 aspect-[3/2] shrink-0">
+              <img
+                src={match.homeTeam.flag}
+                alt=""
+                class="w-full h-full object-cover"
+              />
+            </div>
           ) : (
             <div class="h-7 w-7 rounded-full bg-zinc-800 flex items-center justify-center text-sm shrink-0">
               ⚽
@@ -157,9 +162,15 @@ export default function MatchCard({ match, prediction, session, onSubmit, submit
             {match.awayTeam.name}
           </span>
           {match.awayTeam.flag ? (
-            <img src={match.awayTeam.flag} alt="" class="h-7 w-7 object-contain shrink-0" />
+            <div class="w-8 aspect-[3/2] shrink-0">
+              <img
+                src={match.awayTeam.flag}
+                alt=""
+                class="w-full h-full object-cover"
+              />
+            </div>
           ) : (
-            <div class="h-7 w-7 rounded-full bg-zinc-800 flex items-center justify-center text-sm shrink-0">
+            <div class="w-8 h-6 rounded-full bg-zinc-800 flex items-center justify-center text-sm shrink-0">
               ⚽
             </div>
           )}
@@ -174,11 +185,10 @@ export default function MatchCard({ match, prediction, session, onSubmit, submit
             {prediction.homeScore} - {prediction.awayScore}
           </span>
           <span
-            class={`badge-pill ${
-              prediction.points && prediction.points > 0
-                ? "!bg-green-accent/15 !text-green-accent"
-                : "!bg-zinc-800 !text-zinc-500"
-            }`}
+            class={`badge-pill ${prediction.points && prediction.points > 0
+              ? "!bg-green-accent/15 !text-green-accent"
+              : "!bg-zinc-800 !text-zinc-500"
+              }`}
           >
             {prediction.points != null
               ? `${prediction.points} pts`

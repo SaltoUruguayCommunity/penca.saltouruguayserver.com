@@ -63,9 +63,8 @@ export default function GroupsView({ groups, predictions, session, onSubmit, sub
           >
             <div class="flex items-center gap-3">
               <ChevronDown
-                class={`h-4 w-4 text-accent transition-transform duration-200 ${
-                  openGroups.has(group.name) ? "rotate-0" : "-rotate-90"
-                }`}
+                class={`h-4 w-4 text-accent transition-transform duration-200 ${openGroups.has(group.name) ? "rotate-0" : "-rotate-90"
+                  }`}
               />
               <span class="font-barlow font-bold uppercase text-base text-white tracking-wide">
                 Grupo {group.name}
@@ -78,8 +77,13 @@ export default function GroupsView({ groups, predictions, session, onSubmit, sub
               {group.teams.map((team) => (
                 <span key={team.id} class="inline-block" title={team.name}>
                   {team.flag ? (
-                    <img src={team.flag} alt="" class="h-11 w-11 object-contain" />
-                  ) : (
+                    <div class="w-8 aspect-[3/2]">
+                      <img
+                        src={team.flag}
+                        alt=""
+                        class="w-full h-full object-cover"
+                      />
+                    </div>) : (
                     <span class="text-[10px] font-bold text-muted uppercase px-1.5 py-0.5 rounded bg-zinc-800/50">
                       {team.fifaCode ?? team.name.slice(0, 3)}
                     </span>
