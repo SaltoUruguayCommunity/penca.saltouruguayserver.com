@@ -214,139 +214,143 @@ export default function MatchDetailView({ match, predictions: initialPredictions
         </div>
       )}
 
-      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div class="glass-card p-5 text-center hover:shadow-[0_0_20px_rgba(139,92,246,0.1)] transition-all duration-300">
-          <Users class="h-5 w-5 mx-auto mb-2 text-accent" />
-          <div class="font-barlow font-black text-2xl text-white">{totalPredictions}</div>
-          <div class="text-[11px] text-muted uppercase tracking-wider font-semibold mt-1">Pronosticos</div>
-        </div>
-        {isFinished && match.homeScore !== null && match.awayScore !== null && (
-          <>
-            <div class="glass-card p-5 text-center hover:shadow-[0_0_20px_rgba(139,92,246,0.1)] transition-all duration-300">
-              <BarChart3 class="h-5 w-5 mx-auto mb-2 text-accent" />
-              <div class="font-barlow font-black text-2xl text-white">
-                {totalPredictions > 0
-                  ? Math.round(
-                    (predictions.filter(
-                      (p) => p.homeScore === match.homeScore && p.awayScore === match.awayScore,
-                    ).length /
-                      totalPredictions) *
-                    100,
-                  )
-                  : 0}
-                %
-              </div>
-              <div class="text-[11px] text-muted uppercase tracking-wider font-semibold mt-1">Acertaron exacto</div>
-            </div>
-            <div class="glass-card p-5 text-center hover:shadow-[0_0_20px_rgba(139,92,246,0.1)] transition-all duration-300">
-              <Trophy class="h-5 w-5 mx-auto mb-2 text-accent" />
-              <div class="font-barlow font-black text-2xl text-white">
-                {totalPredictions > 0
-                  ? Math.round(
-                    (predictions.filter((p) => {
-                      const pHome = p.homeScore;
-                      const pAway = p.awayScore;
-                      const pHomeDiff = pHome > pAway ? 1 : pHome < pAway ? -1 : 0;
-                      const realHomeDiff = match.homeScore! > match.awayScore! ? 1 : match.homeScore! < match.awayScore! ? -1 : 0;
-                      return pHomeDiff === realHomeDiff;
-                    }).length /
-                      totalPredictions) *
-                    100,
-                  )
-                  : 0}
-                %
-              </div>
-              <div class="text-[11px] text-muted uppercase tracking-wider font-semibold mt-1">Acertaron ganador</div>
-            </div>
-          </>
-        )}
-        {!isFinished && topPrediction && (
-          <div class="glass-card p-5 text-center sm:col-span-2 glow-gold">
-            <div class="font-barlow font-black text-2xl text-white">{topPrediction[0]}</div>
-            <div class="text-[11px] text-muted uppercase tracking-wider font-semibold mt-1">
-              Resultado mas pronosticado ({topPrediction[1]} votos)
-            </div>
+      {isPast && (
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div class="glass-card p-5 text-center hover:shadow-[0_0_20px_rgba(139,92,246,0.1)] transition-all duration-300">
+            <Users class="h-5 w-5 mx-auto mb-2 text-accent" />
+            <div class="font-barlow font-black text-2xl text-white">{totalPredictions}</div>
+            <div class="text-[11px] text-muted uppercase tracking-wider font-semibold mt-1">Pronosticos</div>
           </div>
-        )}
-      </div>
-
-      <div class="glass-card overflow-hidden">
-        <div class="px-5 py-4 border-b border-accent-border/20">
-          <h3 class="font-barlow font-bold uppercase text-sm text-white">
-            Todos los pronosticos ({totalPredictions})
-          </h3>
+          {isFinished && match.homeScore !== null && match.awayScore !== null && (
+            <>
+              <div class="glass-card p-5 text-center hover:shadow-[0_0_20px_rgba(139,92,246,0.1)] transition-all duration-300">
+                <BarChart3 class="h-5 w-5 mx-auto mb-2 text-accent" />
+                <div class="font-barlow font-black text-2xl text-white">
+                  {totalPredictions > 0
+                    ? Math.round(
+                      (predictions.filter(
+                        (p) => p.homeScore === match.homeScore && p.awayScore === match.awayScore,
+                      ).length /
+                        totalPredictions) *
+                      100,
+                    )
+                    : 0}
+                  %
+                </div>
+                <div class="text-[11px] text-muted uppercase tracking-wider font-semibold mt-1">Acertaron exacto</div>
+              </div>
+              <div class="glass-card p-5 text-center hover:shadow-[0_0_20px_rgba(139,92,246,0.1)] transition-all duration-300">
+                <Trophy class="h-5 w-5 mx-auto mb-2 text-accent" />
+                <div class="font-barlow font-black text-2xl text-white">
+                  {totalPredictions > 0
+                    ? Math.round(
+                      (predictions.filter((p) => {
+                        const pHome = p.homeScore;
+                        const pAway = p.awayScore;
+                        const pHomeDiff = pHome > pAway ? 1 : pHome < pAway ? -1 : 0;
+                        const realHomeDiff = match.homeScore! > match.awayScore! ? 1 : match.homeScore! < match.awayScore! ? -1 : 0;
+                        return pHomeDiff === realHomeDiff;
+                      }).length /
+                        totalPredictions) *
+                      100,
+                    )
+                    : 0}
+                  %
+                </div>
+                <div class="text-[11px] text-muted uppercase tracking-wider font-semibold mt-1">Acertaron ganador</div>
+              </div>
+            </>
+          )}
+          {!isFinished && topPrediction && (
+            <div class="glass-card p-5 text-center sm:col-span-2 glow-gold">
+              <div class="font-barlow font-black text-2xl text-white">{topPrediction[0]}</div>
+              <div class="text-[11px] text-muted uppercase tracking-wider font-semibold mt-1">
+                Resultado mas pronosticado ({topPrediction[1]} votos)
+              </div>
+            </div>
+          )}
         </div>
+      )}
 
-        {predictions.length === 0 ? (
-          <div class="p-8 text-center">
-            <p class="text-muted text-sm">Sin pronosticos todavia.</p>
-            <p class="text-muted/50 text-xs mt-1">Se el primero en pronosticar.</p>
+      {isPast && (
+        <div class="glass-card overflow-hidden">
+          <div class="px-5 py-4 border-b border-accent-border/20">
+            <h3 class="font-barlow font-bold uppercase text-sm text-white">
+              Todos los pronosticos ({totalPredictions})
+            </h3>
           </div>
-        ) : (
-          <div class="overflow-x-auto">
-            <table class="w-full text-sm">
-              <thead>
-                <tr class="bg-accent-subtle/50 text-muted text-[11px] uppercase tracking-[0.12em]">
-                  <th class="px-5 py-3 text-left font-semibold">Usuario</th>
-                  <th class="px-5 py-3 text-center font-semibold">Pronostico</th>
-                  <th class="px-5 py-3 text-right font-semibold">Puntos</th>
-                </tr>
-              </thead>
-              <tbody class="divide-y divide-accent-border/10">
-                {predictions
-                  .sort((a, b) => (b.points ?? 0) - (a.points ?? 0))
-                  .map((p) => {
-                    const isMe = session?.user && p.userId === Number(session.user.id);
-                    const exactMatch = isFinished && match.homeScore === p.homeScore && match.awayScore === p.awayScore;
-                    const correctWinner = isFinished && !exactMatch && match.homeScore !== null && match.awayScore !== null && (
-                      (match.homeScore > match.awayScore && p.homeScore > p.awayScore) ||
-                      (match.homeScore < match.awayScore && p.homeScore < p.awayScore) ||
-                      (match.homeScore === match.awayScore && p.homeScore === p.awayScore)
-                    );
 
-                    return (
-                      <tr key={p.userId} class={`transition ${isMe ? "bg-accent-subtle/30" : "hover:bg-accent-subtle/10"}`} style={isMe ? {boxShadow: 'inset 0 0 20px rgba(139,92,246,0.05)'} : {}}>
-                        <td class="px-5 py-3">
-                          <div class="flex items-center gap-2.5">
-                            {p.avatar ? (
-                              <img src={p.avatar} alt="" class="h-7 w-7 rounded-full object-cover ring-2 ring-accent/20" />
-                            ) : (
-                              <div class="h-7 w-7 rounded-full bg-accent-subtle border border-accent-border flex items-center justify-center text-[10px] text-accent">
-                                U
+          {predictions.length === 0 ? (
+            <div class="p-8 text-center">
+              <p class="text-muted text-sm">Sin pronosticos todavia.</p>
+              <p class="text-muted/50 text-xs mt-1">Se el primero en pronosticar.</p>
+            </div>
+          ) : (
+            <div class="overflow-x-auto">
+              <table class="w-full text-sm">
+                <thead>
+                  <tr class="bg-accent-subtle/50 text-muted text-[11px] uppercase tracking-[0.12em]">
+                    <th class="px-5 py-3 text-left font-semibold">Usuario</th>
+                    <th class="px-5 py-3 text-center font-semibold">Pronostico</th>
+                    <th class="px-5 py-3 text-right font-semibold">Puntos</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-accent-border/10">
+                  {predictions
+                    .sort((a, b) => (b.points ?? 0) - (a.points ?? 0))
+                    .map((p) => {
+                      const isMe = session?.user && p.userId === Number(session.user.id);
+                      const exactMatch = isFinished && match.homeScore === p.homeScore && match.awayScore === p.awayScore;
+                      const correctWinner = isFinished && !exactMatch && match.homeScore !== null && match.awayScore !== null && (
+                        (match.homeScore > match.awayScore && p.homeScore > p.awayScore) ||
+                        (match.homeScore < match.awayScore && p.homeScore < p.awayScore) ||
+                        (match.homeScore === match.awayScore && p.homeScore === p.awayScore)
+                      );
+
+                      return (
+                        <tr key={p.userId} class={`transition ${isMe ? "bg-accent-subtle/30" : "hover:bg-accent-subtle/10"}`} style={isMe ? {boxShadow: 'inset 0 0 20px rgba(139,92,246,0.05)'} : {}}>
+                          <td class="px-5 py-3">
+                            <div class="flex items-center gap-2.5">
+                              {p.avatar ? (
+                                <img src={p.avatar} alt="" class="h-7 w-7 rounded-full object-cover ring-2 ring-accent/20" />
+                              ) : (
+                                <div class="h-7 w-7 rounded-full bg-accent-subtle border border-accent-border flex items-center justify-center text-[10px] text-accent">
+                                  U
+                                </div>
+                              )}
+                              <div class="flex items-center gap-1.5">
+                                <span class={`font-semibold ${isMe ? "text-accent-light" : "text-white"}`}>
+                                  {isMe ? "Vos" : p.username}
+                                </span>
+                                {exactMatch && (
+                                  <span class="text-[10px]" title="Exacto">🎯</span>
+                                )}
+                                {correctWinner && (
+                                  <span class="text-[10px]" title="Ganador">✅</span>
+                                )}
                               </div>
-                            )}
-                            <div class="flex items-center gap-1.5">
-                              <span class={`font-semibold ${isMe ? "text-accent-light" : "text-white"}`}>
-                                {isMe ? "Vos" : p.username}
-                              </span>
-                              {exactMatch && (
-                                <span class="text-[10px]" title="Exacto">🎯</span>
-                              )}
-                              {correctWinner && (
-                                <span class="text-[10px]" title="Ganador">✅</span>
-                              )}
                             </div>
-                          </div>
-                        </td>
-                        <td class="px-5 py-3 text-center">
-                          <span class={`font-barlow font-bold text-base tabular-nums ${exactMatch ? "text-green-accent" : correctWinner ? "text-accent-light" : "text-white"}`}>
-                            {p.homeScore} - {p.awayScore}
-                          </span>
-                        </td>
-                        <td class="px-5 py-3 text-right">
-                          <span class={`font-barlow font-bold text-base tabular-nums ${p.points && p.points > 0 ? "text-green-accent" : p.points === 0 ? "text-zinc-500" : "text-muted"
-                            }`}>
-                            {p.points != null ? `${p.points} pts` : "-"}
-                          </span>
-                        </td>
-                      </tr>
-                    );
-                  })}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </div>
+                          </td>
+                          <td class="px-5 py-3 text-center">
+                            <span class={`font-barlow font-bold text-base tabular-nums ${exactMatch ? "text-green-accent" : correctWinner ? "text-accent-light" : "text-white"}`}>
+                              {p.homeScore} - {p.awayScore}
+                            </span>
+                          </td>
+                          <td class="px-5 py-3 text-right">
+                            <span class={`font-barlow font-bold text-base tabular-nums ${p.points && p.points > 0 ? "text-green-accent" : p.points === 0 ? "text-zinc-500" : "text-muted"
+                              }`}>
+                              {p.points != null ? `${p.points} pts` : "-"}
+                            </span>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }
