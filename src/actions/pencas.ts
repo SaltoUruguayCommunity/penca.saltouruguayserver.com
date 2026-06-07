@@ -1,7 +1,6 @@
 import { ActionError, defineAction } from "astro:actions";
 import { z } from "astro:schema";
 import { and, desc, eq, inArray, lte, ne, sql } from "drizzle-orm";
-import { getSession } from "auth-astro/server";
 import { client, turso } from "../db";
 import {
   WcGroupsTable,
