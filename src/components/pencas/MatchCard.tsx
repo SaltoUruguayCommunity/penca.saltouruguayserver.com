@@ -49,6 +49,16 @@ export default function MatchCard({ match, prediction, session, onSubmit, submit
     const homeScore = parseInt(formData.get("homeScore") as string);
     const awayScore = parseInt(formData.get("awayScore") as string);
     if (isNaN(homeScore) || isNaN(awayScore)) return;
+    
+    // Confetti solo desde el MatchCard
+  import("canvas-confetti").then(({ default: confetti }) => {
+    confetti({
+      particleCount: 80,
+      spread: 70,
+      origin: { y: 0.6 },
+      colors: ["#8B5CF6", "#FACC15", "#22C55E", "#FFFFFF"],
+    });
+  });
     onSubmit(match.id, homeScore, awayScore);
   }
 

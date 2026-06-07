@@ -6,6 +6,7 @@ import GroupsView from "./GroupsView";
 import Leaderboard from "./Leaderboard";
 import LoginButton from "./LoginButton";
 import RecentMatches from "./RecentMatches";
+import QuickPredict from "./QuickPredict";
 
 type Group = {
   id: number;
@@ -72,13 +73,7 @@ export default function PencasApp({ session }: Props) {
   }, [session]);
 
   async function handleSubmit(matchId: number, homeScore: number, awayScore: number) {
-    const { default: confetti } = await import("canvas-confetti");
-    confetti({
-      particleCount: 80,
-      spread: 70,
-      origin: { y: 0.6 },
-      colors: ["#8B5CF6", "#FACC15", "#22C55E", "#FFFFFF"],
-    });
+    
 
     setPredictions((prev) => ({
       ...prev,
@@ -140,6 +135,15 @@ export default function PencasApp({ session }: Props) {
       </div>
 
       <RecentMatches />
+
+      <QuickPredict
+  session={session}
+  groups={groups}
+  predictions={predictions}
+  onSubmit={async (matchId, home, away) => {
+    await handleSubmit(matchId, home, away);
+  }}
+/>
 
       {/* Tabs */}
       <div class="flex gap-1 mb-6 border-b border-accent-border/20">
