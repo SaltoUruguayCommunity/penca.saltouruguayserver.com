@@ -152,7 +152,7 @@ export default function QuickPredict({ session, groups, predictions, onSubmit }:
             <p class="text-sm font-barlow font-bold text-white">
               Te faltan <span class="text-gold">{total}</span> predicciones
             </p>
-            <p class="text-xs text-muted mt-0.5">Cargalas en segundos con la carga rápida.</p>
+            <p class="text-xs text-muted mt-0.5">Llenás todos tus pronósticos en un abrir y cerrar de ojos.</p>
           </div>
           <span class="btn-primary !py-2 !px-4 !text-xs shrink-0 flex items-center gap-1.5">
             Cargar ahora
@@ -171,7 +171,7 @@ export default function QuickPredict({ session, groups, predictions, onSubmit }:
             </div>
             <div class="flex-1">
               <p class="font-barlow font-bold text-white text-sm uppercase tracking-wide">Carga rápida</p>
-              <p class="text-xs text-muted">Completa los partidos que faltan sin soltar el teclado.</p>
+              <p class="text-xs text-muted">Avanzá partido a partido sin tocar el mouse.</p>
             </div>
             {/* Progress */}
             <div class="flex items-center gap-3 shrink-0">
