@@ -12,6 +12,7 @@ type Match = {
 };
 
 type Prediction = {
+  points: number | null;
   matchId: number;
   homeScore: number;
   awayScore: number;
@@ -20,7 +21,7 @@ type Prediction = {
 type Props = {
   match: Match;
   prediction: Prediction;
-  session: Session | null;
+  user: Session['user'] | null;
   onSubmit: (matchId: number, homeScore: number, awayScore: number) => void;
   submitting: boolean;
 };
@@ -34,7 +35,7 @@ const STAGE_LABELS: Record<string, string> = {
   final: "Final",
 };
 
-export default function MatchCard({ match, prediction, session, onSubmit, submitting }: Props) {
+export default function MatchCard({ match, prediction, user, onSubmit, submitting }: Props) {
   const matchDate = new Date(match.matchDate);
   const now = new Date();
   const isFinished = match.status === "finished";
@@ -49,16 +50,16 @@ export default function MatchCard({ match, prediction, session, onSubmit, submit
     const homeScore = parseInt(formData.get("homeScore") as string);
     const awayScore = parseInt(formData.get("awayScore") as string);
     if (isNaN(homeScore) || isNaN(awayScore)) return;
-    
+
     // Confetti solo desde el MatchCard
-  import("canvas-confetti").then(({ default: confetti }) => {
-    confetti({
-      particleCount: 80,
-      spread: 70,
-      origin: { y: 0.6 },
-      colors: ["#8B5CF6", "#FACC15", "#22C55E", "#FFFFFF"],
+    import("canvas-confetti").then(({ default: confetti }) => {
+      confetti({
+        particleCount: 80,
+        spread: 70,
+        origin: { y: 0.6 },
+        colors: ["#8B5CF6", "#FACC15", "#22C55E", "#FFFFFF"],
+      });
     });
-  });
     onSubmit(match.id, homeScore, awayScore);
   }
 
@@ -136,7 +137,7 @@ export default function MatchCard({ match, prediction, session, onSubmit, submit
                 min="0"
                 max="50"
                 defaultValue={hasPrediction ? prediction.homeScore : ""}
-                disabled={!session?.user || submitting}
+                disabled={!user || submitting}
                 placeholder="-"
                 required
                 class="input-score"
@@ -148,12 +149,12 @@ export default function MatchCard({ match, prediction, session, onSubmit, submit
                 min="0"
                 max="50"
                 defaultValue={hasPrediction ? prediction.awayScore : ""}
-                disabled={!session?.user || submitting}
+                disabled={!user || submitting}
                 placeholder="-"
                 required
                 class="input-score"
               />
-              {session?.user && (
+              {user && (
                 <button
                   type="submit"
                   disabled={submitting}

@@ -4,10 +4,10 @@ import type { Session } from "@auth/core/types";
 import { LogOut, User } from "lucide-preact";
 
 type Props = {
-  session: Session | null;
+  user: Session['user'] | null;
 };
 
-export default function LoginButton({ session }: Props) {
+export default function LoginButton({ user }: Props) {
   const [error, setError] = useState("");
 
   function handleSignIn() {
@@ -31,17 +31,18 @@ export default function LoginButton({ session }: Props) {
   }
 
   const handleSignOut = useCallback(async () => {
+    // @ts-expect-error - The types for signOut don't include callbackUrl, but it is supported by auth-astro
     await signOut({ callbackUrl: "/" });
   }, []);
 
-  if (session?.user) {
+  if (user) {
     return (
       <div class="flex items-center gap-3">
         <div class="flex items-center gap-2.5">
-          {session.user.image ? (
+          {user.image ? (
             <img
-              src={session.user.image}
-              alt={session.user.name ?? ""}
+              src={user.image}
+              alt={user.name ?? ""}
               class="h-9 w-9 rounded-full object-cover ring-2 ring-accent/30 shadow-[0_0_15px_rgba(139,92,246,0.15)]"
             />
           ) : (
@@ -51,11 +52,11 @@ export default function LoginButton({ session }: Props) {
           )}
           <div class="hidden sm:block">
             <p class="text-sm font-semibold text-white leading-tight">
-              {session.user.username ?? session.user.name}
+              {user.username ?? user.name}
             </p>
-            {typeof session.user.coins === "number" && (
+            {typeof user.coins === "number" && (
               <p class="text-[11px] text-gold font-semibold uppercase tracking-wider drop-shadow-[0_0_10px_rgba(250,204,21,0.15)]">
-                ★ {session.user.coins} puntos
+                ★ {user.coins} puntos
               </p>
             )}
           </div>

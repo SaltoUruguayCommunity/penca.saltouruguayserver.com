@@ -44,16 +44,16 @@ const allPredictions = await client
   .where(eq(WcPredictionsTable.matchId, matchId))
   .all();
 
-const session = await getSession(Astro.request);
+const { user } = Astro.locals;
 
-const userPrediction = session?.user?.id
-  ? (allPredictions.find((p) => p.userId === session.user.id) ?? null)
+const userPrediction = user?.id
+  ? (allPredictions.find((p) => p.userId === user.id) ?? null)
   : null;
 
 let userStreak = 0;
-if (session?.user?.id) {
+if (user?.id) {
   const userData = await client.query.UsersTable.findFirst({
-    where: eq(UsersTable.id, Number(session.user.id)),
+    where: eq(UsersTable.id, Number(user.id)),
     columns: { streak: true },
   });
   userStreak = userData?.streak ?? 0;
@@ -298,7 +298,7 @@ const isLive = !isFinished && matchDate <= new Date();
         predictions={allPredictions}
         userPrediction={userPrediction}
         userStreak={userStreak}
-        session={session}
+        user={user}
       />
     </div>
 
@@ -364,7 +364,7 @@ const isLive = !isFinished && matchDate <= new Date();
 </Layout>
 
 <script>
-  const navbar = document.getElementById("navbar");
+  const navbar = document.getElementById("navbar")!;
   let ticking = false;
   document.addEventListener("scroll", () => {
     if (!ticking) {

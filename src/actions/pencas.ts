@@ -95,9 +95,9 @@ export const pencas = {
       homeScore: z.number().int().min(0).max(50),
       awayScore: z.number().int().min(0).max(50),
     }),
-    handler: async ({ matchId, homeScore, awayScore }, { request }) => {
-      const session = await getSession(request);
-      if (!session?.user?.id) {
+    handler: async ({ matchId, homeScore, awayScore }, { request, locals }) => {
+      const { user } = locals
+      if (!user?.id) {
         throw new ActionError({
           code: "UNAUTHORIZED",
           message: "Debes iniciar sesión para pronosticar",
@@ -127,7 +127,7 @@ export const pencas = {
         .from(WcPredictionsTable)
         .where(
           and(
-            eq(WcPredictionsTable.userId, session.user.id),
+            eq(WcPredictionsTable.userId, user.id),
             eq(WcPredictionsTable.matchId, matchId),
           ),
         )
@@ -136,7 +136,7 @@ export const pencas = {
       await client
         .insert(WcPredictionsTable)
         .values({
-          userId: session.user.id,
+          userId: user.id,
           matchId,
           homeScore,
           awayScore,
@@ -148,7 +148,7 @@ export const pencas = {
         .run();
 
       if (!existing) {
-        await rewardPrediction(session.user.id);
+        await rewardPrediction(user.id);
       }
 
       return { success: true };
@@ -159,16 +159,16 @@ export const pencas = {
     input: z.object({
       matchId: z.number().optional(),
     }),
-    handler: async ({ matchId }, { request }) => {
-      const session = await getSession(request);
-      if (!session?.user?.id) {
+    handler: async ({ matchId }, { request, locals }) => {
+      const { user } = locals;
+      if (!user?.id) {
         throw new ActionError({
           code: "UNAUTHORIZED",
           message: "Debes iniciar sesión",
         });
       }
 
-      const conditions = [eq(WcPredictionsTable.userId, session.user.id)];
+      const conditions = [eq(WcPredictionsTable.userId, user.id)];
       if (matchId) conditions.push(eq(WcPredictionsTable.matchId, matchId));
 
       return client.query.WcPredictionsTable.findMany({
@@ -271,8 +271,8 @@ export const pencas = {
 
   admin: {
     fetchFromApi: defineAction({
-      handler: async (_, { request }) => {
-        await requireAdmin(request);
+      handler: async (_, { request, locals }) => {
+        await requireAdmin(locals);
 
         // 1. Fetch externo en paralelo
         const [standings, matchesRes] = await Promise.all([
@@ -404,8 +404,8 @@ export const pencas = {
         homeScore: z.number().int().min(0),
         awayScore: z.number().int().min(0),
       }),
-      handler: async ({ matchId, homeScore, awayScore }, { request }) => {
-        await requireAdmin(request);
+      handler: async ({ matchId, homeScore, awayScore }, { request, locals }) => {
+        await requireAdmin(locals);
 
         await client
           .update(WcMatchesTable)
@@ -428,8 +428,8 @@ export const pencas = {
       input: z.object({
         matchId: z.number(),
       }),
-      handler: async ({ matchId }, { request }) => {
-        await requireAdmin(request);
+      handler: async ({ matchId }, { request, locals }) => {
+        await requireAdmin(locals);
         await recalculateMatchPoints(matchId);
         return { success: true };
       },
@@ -439,8 +439,8 @@ export const pencas = {
       input: z.object({
         matchId: z.number(),
       }),
-      handler: async ({ matchId }, { request }) => {
-        await requireAdmin(request);
+      handler: async ({ matchId }, { request, locals }) => {
+        await requireAdmin(locals);
 
         await client
           .update(WcPredictionsTable)
@@ -464,15 +464,15 @@ export const pencas = {
     }),
 
     syncScores: defineAction({
-      handler: async (_, { request }) => {
-        await requireAdmin(request);
+      handler: async (_, { request, locals }) => {
+        await requireAdmin(locals);
         return await syncScoresFromApi();
       },
     }),
 
     checkMatches: defineAction({
-      handler: async (_, { request }) => {
-        await requireAdmin(request);
+      handler: async (_, { request, locals }) => {
+        await requireAdmin(locals);
 
         const groups = await client.select().from(WcGroupsTable).all();
         const matches = await client.select().from(WcMatchesTable).all();
@@ -499,15 +499,16 @@ export const pencas = {
   },
 };
 
-async function requireAdmin(request: Request) {
-  const session = await getSession(request);
-  console.log("Session in requireAdmin:", session);
-  if (!session?.user?.id || !session.user.is_admin) {
+async function requireAdmin(locals: App.Locals) {
+  const { user } = locals;
+  if (!user?.id || !user.is_admin) {
     throw new ActionError({
       code: "FORBIDDEN",
       message: "No tienes permisos de administrador",
     });
   }
+
+  return user;
 }
 
 async function recalculateMatchPoints(matchId: number) {

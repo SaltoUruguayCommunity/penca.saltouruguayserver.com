@@ -17,10 +17,10 @@ type Match = {
 };
 
 type Props = {
-  session: Session | null;
+  user: Session['user'] | null;
 };
 
-export default function PencasAdmin({ session }: Props) {
+export default function PencasAdmin({ user }: Props) {
   const [matches, setMatches] = useState<Match[]>([]);
   const [fetching, setFetching] = useState(false);
   const [syncing, setSyncing] = useState(false);
@@ -225,11 +225,11 @@ export default function PencasAdmin({ session }: Props) {
       )}
 
       {/* Admin info */}
-      {session?.user && (
+      {user && (
         <div class="glass-card p-4 mb-6 flex items-center gap-3 glow-violet">
-          <img src={session.user.image ?? undefined} alt={session.user.name ?? "User avatar"} class="w-10 h-10 rounded-full object-cover" />
+          <img src={user.image ?? undefined} alt={user.name ?? "User avatar"} class="w-10 h-10 rounded-full object-cover" />
           <div>
-            <p class="text-sm text-white font-semibold">{session.user.name}</p>
+            <p class="text-sm text-white font-semibold">{user.name}</p>
             <p class="text-[11px] text-muted uppercase tracking-wider">Administrador</p>
           </div>
         </div>
@@ -252,7 +252,7 @@ export default function PencasAdmin({ session }: Props) {
             <tbody class="divide-y divide-accent-border/10">
               {matches.length === 0 ? (
                 <tr>
-                  <td colspan="6" class="text-center py-12 text-muted text-sm">
+                  <td colspan={6} class="text-center py-12 text-muted text-sm">
                     No hay partidos. Importá desde la API primero.
                   </td>
                 </tr>

@@ -3,7 +3,7 @@ import { getSession } from "auth-astro/server";
 import Layout from "../layouts/Layout.astro";
 import PencasApp from "../components/pencas/PencasApp.tsx";
 
-const session = await getSession(Astro.request);
+const { user } = Astro.locals;
 ---
 
 <Layout
@@ -80,7 +80,7 @@ const session = await getSession(Astro.request);
     </nav>
 
     <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 pb-16">
-      <PencasApp client:load session={session} />
+      <PencasApp client:load user={user} />
     </div>
 
     <!-- Footer -->
@@ -146,7 +146,7 @@ const session = await getSession(Astro.request);
 
 <script>
   // Navbar scroll shadow
-  const navbar = document.getElementById("navbar");
+  const navbar = document.getElementById("navbar")!;
   let ticking = false;
   document.addEventListener("scroll", () => {
     if (!ticking) {

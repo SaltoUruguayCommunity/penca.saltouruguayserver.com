@@ -20,12 +20,12 @@ type Group = {
   }>;
 };
 
-type PredictionMap = Record<number, { homeScore: number; awayScore: number; points?: number | null }>;
+type PredictionMap = Record<number, { matchId: number; homeScore: number; awayScore: number; points?: number | null }>;
 
 type Props = {
   groups: Group[];
   predictions: PredictionMap;
-  session: Session | null;
+  user: Session['user'] | null;
   onSubmit: (matchId: number, homeScore: number, awayScore: number) => void;
   submitting: boolean;
 };
@@ -45,7 +45,7 @@ function groupByFecha(matches: Group["matches"]) {
   return fechas;
 }
 
-export default function GroupsView({ groups, predictions, session, onSubmit, submitting }: Props) {
+export default function GroupsView({ groups, predictions, user, onSubmit, submitting }: Props) {
   const [activeGroup, setActiveGroup] = useState<string>(groups[0]?.name ?? "A");
 
   const currentGroup = groups.find((g) => g.name === activeGroup);
@@ -74,14 +74,13 @@ export default function GroupsView({ groups, predictions, session, onSubmit, sub
           <button
             key={g.name}
             onClick={() => setActiveGroup(g.name)}
-            class={`relative px-3 py-2 rounded-md text-sm font-barlow font-bold uppercase tracking-wider transition-all duration-200 flex items-center gap-2 ${
-              activeGroup === g.name
-                ? "bg-accent text-white shadow-[0_0_20px_rgba(139,92,246,0.4)]"
-                : "text-muted hover:text-white hover:bg-accent-subtle/40"
-            }`}
+            class={`relative px-3 py-2 rounded-md text-sm font-barlow font-bold uppercase tracking-wider transition-all duration-200 flex items-center gap-2 ${activeGroup === g.name
+              ? "bg-accent text-white shadow-[0_0_20px_rgba(139,92,246,0.4)]"
+              : "text-muted hover:text-white hover:bg-accent-subtle/40"
+              }`}
           >
             <span>Grupo {g.name}</span>
-            
+
           </button>
         ))}
       </div>
@@ -104,16 +103,28 @@ export default function GroupsView({ groups, predictions, session, onSubmit, sub
 
                 {/* Match cards grid: 2 columns on md+ */}
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  {matches.map((match) => (
-                    <MatchCard
-                      key={match.id}
-                      match={match}
-                      prediction={predictions[match.id] ?? null}
-                      session={session}
-                      onSubmit={onSubmit}
-                      submitting={submitting}
-                    />
-                  ))}
+                  {matches.map((match) => {
+                    const existing = predictions[match.id];
+                    const prediction: { matchId: number; homeScore: number; awayScore: number; points: number | null } = existing
+                      ? {
+                        matchId: existing.matchId,
+                        homeScore: existing.homeScore,
+                        awayScore: existing.awayScore,
+                        points: existing.points ?? null,
+                      }
+                      : { matchId: match.id, homeScore: match.homeScore ?? 0, awayScore: match.awayScore ?? 0, points: null };
+
+                    return (
+                      <MatchCard
+                        key={match.id}
+                        match={match}
+                        prediction={prediction}
+                        user={user}
+                        onSubmit={onSubmit}
+                        submitting={submitting}
+                      />
+                    );
+                  })}
                 </div>
               </div>
             ))}

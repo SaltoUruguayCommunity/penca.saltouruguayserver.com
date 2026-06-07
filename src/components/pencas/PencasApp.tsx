@@ -36,10 +36,10 @@ type LeaderboardEntry = {
 };
 
 type Props = {
-  session: Session | null;
+  user: Session['user'] | null;
 };
 
-export default function PencasApp({ session }: Props) {
+export default function PencasApp({ user }: Props) {
   const [tab, setTab] = useState<"groups" | "leaderboard">("groups");
   const [groups, setGroups] = useState<Group[]>([]);
   const [predictions, setPredictions] = useState<PredictionMap>({});
@@ -59,7 +59,7 @@ export default function PencasApp({ session }: Props) {
   }, []);
 
   useEffect(() => {
-    if (session?.user) {
+    if (user) {
       actions.pencas.getPredictions({}).then((res) => {
         if (res.data) {
           const map: PredictionMap = {};
@@ -70,10 +70,10 @@ export default function PencasApp({ session }: Props) {
         }
       });
     }
-  }, [session]);
+  }, [user]);
 
   async function handleSubmit(matchId: number, homeScore: number, awayScore: number) {
-    
+
 
     setPredictions((prev) => ({
       ...prev,
@@ -110,12 +110,12 @@ export default function PencasApp({ session }: Props) {
               Panel de pronósticos
             </h3>
             <p class="text-muted text-base mt-1">
-              {session?.user
-                ? `Bienvenido, ${session.user.username ?? session.user.name}`
+              {user
+                ? `Bienvenido, ${user.username ?? user.name}`
                 : "Iniciá sesión para pronosticar"}
             </p>
-            {session?.user && leaderboard.length > 0 && (() => {
-              const me = leaderboard.find(e => e.userId === Number(session.user!.id));
+            {user && leaderboard.length > 0 && (() => {
+              const me = leaderboard.find(e => e.userId === Number(user.id));
               return me && me.streak > 0 ? (
                 <div class="mt-2 flex items-center gap-1.5 text-xs text-gold font-semibold">
                   <span>🔥 Racha de {me.streak} acierto{me.streak !== 1 ? "s" : ""}</span>
@@ -124,12 +124,12 @@ export default function PencasApp({ session }: Props) {
             })()}
           </div>
           <div class="flex items-center gap-2">
-            {session?.user?.is_admin && (
+            {user?.is_admin && (
               <a href="/admin/pencas" class="text-xs font-barlow font-bold uppercase tracking-wider text-accent hover:text-accent-light transition px-3 py-2 rounded-md border border-accent-border/30 hover:border-accent/50 hover:shadow-[0_0_15px_rgba(139,92,246,0.15)]">
                 Admin
               </a>
             )}
-            <LoginButton session={session} />
+            <LoginButton user={user} />
           </div>
         </div>
       </div>
@@ -137,34 +137,32 @@ export default function PencasApp({ session }: Props) {
       <RecentMatches />
 
       <QuickPredict
-  session={session}
-  groups={groups}
-  predictions={predictions}
-  onSubmit={async (matchId, home, away) => {
-    await handleSubmit(matchId, home, away);
-  }}
-/>
+        user={user}
+        groups={groups}
+        predictions={predictions}
+        onSubmit={async (matchId, home, away) => {
+          await handleSubmit(matchId, home, away);
+        }}
+      />
 
       {/* Tabs */}
       <div class="flex gap-1 mb-6 border-b border-accent-border/20">
         <button
           onClick={() => setTab("groups")}
-          class={`relative px-5 py-3 text-lg font-barlow font-bold uppercase tracking-wider transition -mb-[1px] ${
-            tab === "groups"
-              ? "text-accent"
-              : "text-muted hover:text-white"
-          }`}
+          class={`relative px-5 py-3 text-lg font-barlow font-bold uppercase tracking-wider transition -mb-[1px] ${tab === "groups"
+            ? "text-accent"
+            : "text-muted hover:text-white"
+            }`}
         >
           Grupos
           <span class={`absolute bottom-0 left-0 h-0.5 bg-accent transition-all duration-300 ${tab === "groups" ? "w-full" : "w-0"}`}></span>
         </button>
         <button
           onClick={() => setTab("leaderboard")}
-          class={`relative px-5 py-3 text-lg font-barlow font-bold uppercase tracking-wider transition -mb-[1px] ${
-            tab === "leaderboard"
-              ? "text-accent"
-              : "text-muted hover:text-white"
-          }`}
+          class={`relative px-5 py-3 text-lg font-barlow font-bold uppercase tracking-wider transition -mb-[1px] ${tab === "leaderboard"
+            ? "text-accent"
+            : "text-muted hover:text-white"
+            }`}
         >
           Tabla de posiciones
           <span class={`absolute bottom-0 left-0 h-0.5 bg-accent transition-all duration-300 ${tab === "leaderboard" ? "w-full" : "w-0"}`}></span>
@@ -181,12 +179,12 @@ export default function PencasApp({ session }: Props) {
         <GroupsView
           groups={groups}
           predictions={predictions}
-          session={session}
+          user={user}
           onSubmit={handleSubmit}
           submitting={submitting}
         />
       ) : (
-        <Leaderboard entries={leaderboard} session={session} />
+        <Leaderboard entries={leaderboard} user={user} />
       )}
     </div>
   );

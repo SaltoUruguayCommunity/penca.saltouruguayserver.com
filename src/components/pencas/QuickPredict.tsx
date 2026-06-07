@@ -16,7 +16,7 @@ type Match = {
 type PredictionMap = Record<number, { homeScore: number; awayScore: number; points?: number | null }>;
 
 type Props = {
-  session: Session | null;
+  user: Session['user'] | null;
   groups: Array<{
     matches: Match[];
   }>;
@@ -43,7 +43,7 @@ const STAGE_LABELS: Record<string, string> = {
   final: "Final",
 };
 
-export default function QuickPredict({ session, groups, predictions, onSubmit }: Props) {
+export default function QuickPredict({ user, groups, predictions, onSubmit }: Props) {
   const [open, setOpen] = useState(false);
   const [localPreds, setLocalPreds] = useState<Record<number, { home: string; away: string }>>({});
   const [saving, setSaving] = useState<number | null>(null);
@@ -134,7 +134,7 @@ export default function QuickPredict({ session, groups, predictions, onSubmit }:
     }
   }
 
-  if (!session?.user) return null;
+  if (!user) return null;
   if (total === 0) return null;
 
   return (

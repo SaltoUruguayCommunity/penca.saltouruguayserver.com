@@ -31,10 +31,10 @@ type Props = {
   predictions: Prediction[];
   userPrediction: Prediction | null;
   userStreak?: number;
-  session: Session | null;
+  user: Session["user"] | null;
 };
 
-export default function MatchDetailView({ match, predictions: initialPredictions, userPrediction, userStreak = 0, session }: Props) {
+export default function MatchDetailView({ match, predictions: initialPredictions, userPrediction, userStreak = 0, user }: Props) {
   const [predictions, setPredictions] = useState<Prediction[]>(initialPredictions);
   const [myPrediction, setMyPrediction] = useState<Prediction | null>(userPrediction);
   const [submitting, setSubmitting] = useState(false);
@@ -45,7 +45,7 @@ export default function MatchDetailView({ match, predictions: initialPredictions
   const isFinished = match.status === "finished";
   const isLive = !isFinished && matchDate <= now;
   const isPast = isFinished || isLive;
-  const canPredict = !isPast && !!session?.user;
+  const canPredict = !isPast && !!user;
 
   useEffect(() => {
     if (isPast) return;
@@ -87,7 +87,7 @@ export default function MatchDetailView({ match, predictions: initialPredictions
       colors: ["#8B5CF6", "#FACC15", "#22C55E", "#FFFFFF"],
     });
 
-    setMyPrediction({ userId: Number(session!.user!.id), username: session!.user!.username ?? session!.user!.name ?? "", avatar: session!.user!.image ?? null, homeScore, awayScore, points: null });
+    setMyPrediction({ userId: Number(user!.id), username: user!.username ?? user!.name ?? "", avatar: user!.image ?? null, homeScore, awayScore, points: null });
     setSubmitting(true);
     const res = await actions.pencas.submitPrediction({ matchId: match.id, homeScore, awayScore });
     setSubmitting(false);
@@ -95,7 +95,7 @@ export default function MatchDetailView({ match, predictions: initialPredictions
     const reload = await actions.pencas.getMatchDetail({ matchId: match.id });
     if (reload.data) {
       setPredictions(reload.data.predictions as Prediction[]);
-      const userId = session?.user?.id;
+      const userId = user?.id;
       if (userId) {
         const updated = reload.data.predictions.find((p: Prediction) => p.userId === Number(userId)) ?? null;
         setMyPrediction(updated);
@@ -128,16 +128,16 @@ export default function MatchDetailView({ match, predictions: initialPredictions
     <div class="space-y-6">
       {/* Countdown banner */}
       {!isPast && (
-        <div class={`glass-card p-4 flex items-center gap-3 ${!session?.user ? "border-accent-border/30" : ""}`}>
+        <div class={`glass-card p-4 flex items-center gap-3 ${!user ? "border-accent-border/30" : ""}`}>
           <span class={`text-lg ${timeLeft > 60000 ? "" : "animate-pulse"}`}>⏱</span>
           <div class="flex-1">
-            <p class={`text-sm font-semibold ${session?.user ? "text-accent-light" : "text-muted"}`}>
-              {session?.user
+            <p class={`text-sm font-semibold ${user ? "text-accent-light" : "text-muted"}`}>
+              {user
                 ? `Te quedan ${formatTime(timeLeft)} para pronosticar`
                 : `Quedan ${formatTime(timeLeft)} — Iniciá sesión para pronosticar`}
             </p>
           </div>
-          {session?.user && (
+          {user && (
             <span class="text-xs font-barlow font-bold uppercase tracking-wider text-accent-light/60">
               {timeLeft > 3600000 ? "Disponible" : timeLeft > 60000 ? "Minutos" : "Segundos"}
             </span>
@@ -206,7 +206,7 @@ export default function MatchDetailView({ match, predictions: initialPredictions
         </div>
       )}
 
-      {!session?.user && !isPast && (
+      {!user && !isPast && (
         <div class="glass-card p-6 text-center">
           <p class="text-muted text-sm">
             Iniciá sesión para pronosticar este partido.
@@ -299,7 +299,7 @@ export default function MatchDetailView({ match, predictions: initialPredictions
                   {predictions
                     .sort((a, b) => (b.points ?? 0) - (a.points ?? 0))
                     .map((p) => {
-                      const isMe = session?.user && p.userId === Number(session.user.id);
+                      const isMe = user && p.userId === Number(user.id);
                       const exactMatch = isFinished && match.homeScore === p.homeScore && match.awayScore === p.awayScore;
                       const correctWinner = isFinished && !exactMatch && match.homeScore !== null && match.awayScore !== null && (
                         (match.homeScore > match.awayScore && p.homeScore > p.awayScore) ||
@@ -308,7 +308,7 @@ export default function MatchDetailView({ match, predictions: initialPredictions
                       );
 
                       return (
-                        <tr key={p.userId} class={`transition ${isMe ? "bg-accent-subtle/30" : "hover:bg-accent-subtle/10"}`} style={isMe ? {boxShadow: 'inset 0 0 20px rgba(139,92,246,0.05)'} : {}}>
+                        <tr key={p.userId} class={`transition ${isMe ? "bg-accent-subtle/30" : "hover:bg-accent-subtle/10"}`} style={isMe ? { boxShadow: 'inset 0 0 20px rgba(139,92,246,0.05)' } : {}}>
                           <td class="px-5 py-3">
                             <div class="flex items-center gap-2.5">
                               {p.avatar ? (
