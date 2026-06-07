@@ -36,14 +36,12 @@ function groupByFecha(matches: Group["matches"]) {
   const sorted = [...matches].sort(
     (a, b) => new Date(a.matchDate).getTime() - new Date(b.matchDate).getTime()
   );
-  // Assign round number by matchDate order within group (each pair = 1 fecha)
-  const uniqueDates = [...new Set(sorted.map((m) => m.matchDate.split("T")[0]))];
-  for (const m of sorted) {
-    const dateKey = m.matchDate.split("T")[0];
-    const round = uniqueDates.indexOf(dateKey) + 1;
+  // Chunk en grupos de 2 → Fecha 1, Fecha 2, Fecha 3
+  sorted.forEach((m, i) => {
+    const round = Math.floor(i / 2) + 1;
     if (!fechas[round]) fechas[round] = [];
     fechas[round].push(m);
-  }
+  });
   return fechas;
 }
 
@@ -83,14 +81,7 @@ export default function GroupsView({ groups, predictions, session, onSubmit, sub
             }`}
           >
             <span>Grupo {g.name}</span>
-            {/* Tiny flags */}
-            <span class="hidden sm:flex items-center gap-0.5">
-              {g.teams.slice(0, 2).map((t) =>
-                t.flag ? (
-                  <img key={t.id} src={t.flag} alt="" class="w-4 h-3 object-cover opacity-70" />
-                ) : null
-              )}
-            </span>
+            
           </button>
         ))}
       </div>
