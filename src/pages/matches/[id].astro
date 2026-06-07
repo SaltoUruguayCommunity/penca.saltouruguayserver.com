@@ -19,8 +19,8 @@ const matchId = Number(id);
 const match = await client.query.WcMatchesTable.findFirst({
   where: eq(WcMatchesTable.id, matchId),
   with: {
-    homeTeam: { columns: { id: true, name: true, flag: true } },
-    awayTeam: { columns: { id: true, name: true, flag: true } },
+    homeTeam: { columns: { id: true, name: true, flag: true, fifaCode: true } },
+    awayTeam: { columns: { id: true, name: true, flag: true, fifaCode: true } },
     group: { columns: { id: true, name: true } },
   },
 });
@@ -82,6 +82,72 @@ const STAGE_LABELS: Record<string, string> = {
 const matchDate = new Date(match.matchDate);
 const isFinished = match.status === "finished";
 const isLive = !isFinished && matchDate <= new Date();
+
+const eventStatusMap: Record<string, string> = {
+  scheduled: "https://schema.org/EventScheduled",
+  live: "https://schema.org/EventActive",
+  finished: "https://schema.org/EventCompleted",
+  postponed: "https://schema.org/EventPostponed",
+  cancelled: "https://schema.org/EventCancelled",
+};
+
+const homeCompetitor: Record<string, unknown> = {
+  "@type": "SportsTeam",
+  "name": match.homeTeam.name,
+};
+if (match.homeTeam.flag) {
+  homeCompetitor.image = match.homeTeam.flag;
+}
+if (match.homeTeam.fifaCode) {
+  homeCompetitor.identifier = {
+    "@type": "PropertyValue",
+    "propertyID": "FIFA",
+    value: match.homeTeam.fifaCode,
+  };
+}
+if (match.homeScore !== null) {
+  homeCompetitor.score = match.homeScore;
+}
+
+const awayCompetitor: Record<string, unknown> = {
+  "@type": "SportsTeam",
+  "name": match.awayTeam.name,
+};
+if (match.awayTeam.flag) {
+  awayCompetitor.image = match.awayTeam.flag;
+}
+if (match.awayTeam.fifaCode) {
+  awayCompetitor.identifier = {
+    "@type": "PropertyValue",
+    "propertyID": "FIFA",
+    value: match.awayTeam.fifaCode,
+  };
+}
+if (match.awayScore !== null) {
+  awayCompetitor.score = match.awayScore;
+}
+
+const sportsEventSchema = {
+  "@context": "https://schema.org",
+  "@type": "SportsEvent",
+  "@id": `${Astro.url.origin}/matches/${match.id}#event`,
+  "name": `${match.homeTeam.name} vs ${match.awayTeam.name}`,
+  "description": `Partido de ${STAGE_LABELS[match.stage] ?? match.stage} del Mundial 2026 entre ${match.homeTeam.name} y ${match.awayTeam.name}.`,
+  "startDate": match.matchDate,
+  "eventStatus": eventStatusMap[match.status] ?? "https://schema.org/EventScheduled",
+  "eventAttendanceMode": "https://schema.org/OfflineEventAttendanceMode",
+  "location": {
+    "@type": "Place",
+    "name": "Estadio del Mundial 2026",
+    "address": { "@type": "PostalAddress", "addressCountry": "US" },
+  },
+  "competitor": [homeCompetitor, awayCompetitor],
+  "superEvent": {
+    "@type": "SportsEvent",
+    "name": "FIFA World Cup 2026",
+  },
+  "organizer": { "@id": "https://saltouruguayserver.com/#organization" },
+};
 ---
 
 <Layout
@@ -89,6 +155,7 @@ const isLive = !isFinished && matchDate <= new Date();
   description={`Pronóstico del partido ${match.homeTeam.name} vs ${match.awayTeam.name} por ${STAGE_LABELS[match.stage] ?? match.stage} del Mundial 2026.`}
   image={match.homeTeam.flag ?? match.awayTeam.flag ?? undefined}
 >
+  <script type="application/ld+json" set:html={JSON.stringify(sportsEventSchema)}></script>
   <div class="min-h-screen">
     <!-- Ambient Background -->
     <div class="fixed inset-0 pointer-events-none overflow-hidden">

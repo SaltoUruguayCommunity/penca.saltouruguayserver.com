@@ -24,6 +24,7 @@ const {
 
 const fullTitle = `${title} — ${SITE_NAME}`;
 const url = Astro.url.href;
+const origin = Astro.url.origin;
 ---
 
 <!doctype html>
@@ -45,6 +46,31 @@ const url = Astro.url.href;
     <meta name="twitter:title" content={title} />
     <meta name="twitter:description" content={description} />
     {image && <meta name="twitter:image" content={image} />}
+
+    <script type="application/ld+json" set:html={JSON.stringify({
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  "@id": "https://saltouruguayserver.com/#organization",
+  "name": "SaltoUruguayServer",
+  "url": "https://saltouruguayserver.com",
+  "sameAs": [
+    "https://instagram.com/saltouruguayserver",
+    "https://discord.gg/XwHSRRwnzS",
+    "https://twitch.tv/saltouruguayserver",
+    "https://x.com/SaltoUruguayS",
+    "https://github.com/yanquisalexander/saltouruguay-web",
+  ],
+})}></script>
+    <script type="application/ld+json" set:html={JSON.stringify({
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  "@id": `${origin}/#website`,
+  "url": origin,
+  "name": SITE_NAME,
+  "description": description,
+  "publisher": { "@id": "https://saltouruguayserver.com/#organization" },
+  "inLanguage": "es-UY",
+})}></script>
 
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
