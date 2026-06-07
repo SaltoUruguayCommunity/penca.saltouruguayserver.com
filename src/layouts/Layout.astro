@@ -3,7 +3,8 @@ import "../styles/global.css";
 import Toaster from "../components/ui/Toast.tsx";
 
 const SITE_NAME = "Penca Mundial 2026";
-const DEFAULT_DESC = "Pronosticá los partidos del Mundial 2026, acumulá puntos y competí contra otros hinchas en el ranking de SaltoUruguayServer.";
+const DEFAULT_DESC =
+  "Pronosticá los partidos del Mundial 2026, acumulá puntos y competí contra otros hinchas en el ranking de SaltoUruguayServer.";
 
 export interface Props {
   title: string;
@@ -31,7 +32,7 @@ const url = Astro.url.href;
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>{fullTitle}</title>
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" type="image/ico" href="/favicon.ico" />
     <meta name="description" content={description} />
     {noIndex && <meta name="robots" content="noindex" />}
     <meta property="og:title" content={title} />

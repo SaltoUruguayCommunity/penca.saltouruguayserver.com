@@ -649,7 +649,7 @@ if (user) {
     });
 
     // Navbar scroll shadow
-    const navbar = document.getElementById("navbar");
+    const navbar = document.getElementById("navbar")!;
     let ticking = false;
     document.addEventListener("scroll", () => {
       if (!ticking) {
