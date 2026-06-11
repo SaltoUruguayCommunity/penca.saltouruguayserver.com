@@ -9,7 +9,7 @@ export function calcPoints(
 
   const predResult = Math.sign(homePred - awayPred);
   const realResult = Math.sign(homeReal - awayReal);
-  if (predResult === realResult) return 2;
+  if (predResult === realResult) return 3;
 
   return 0;
 }
