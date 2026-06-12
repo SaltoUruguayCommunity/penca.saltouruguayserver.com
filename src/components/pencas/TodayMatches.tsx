@@ -1,5 +1,3 @@
-import { Fragment } from "preact";
-
 type Match = {
   id: number;
   matchDate: string;
@@ -27,76 +25,96 @@ function formatTime(dateStr: string) {
   return d.toLocaleTimeString("es-UY", { hour: "2-digit", minute: "2-digit" });
 }
 
-export default function TodayMatches({ groups }: Props) {
+function MatchRow(props: { m: Match & { groupName: string } }) {
+  const m = props.m;
+  const url = "/matches/" + m.id;
+  const rowClass = "flex items-center gap-3 px-4 py-3 transition-colors group";
+  const homeFlag = m.homeTeam.flag || "";
+  const awayFlag = m.awayTeam.flag || "";
+
+  return (
+    <a href={url} class={rowClass}>
+      <div class="w-24 shrink-0">
+        <p class="text-xs font-bold text-accent-light">
+          {formatTime(m.matchDate)}
+        </p>
+        <p class="text-xs text-muted uppercase">
+          Grupo {m.groupName}
+        </p>
+      </div>
+      <div class="flex items-center gap-2 flex-1 min-w-0 justify-end">
+        <span class="text-sm font-semibold text-white truncate text-right">
+          {m.homeTeam.name}
+        </span>
+        {homeFlag && (
+          <img src={homeFlag} alt="" class="w-7 h-5 object-cover shrink-0" />
+        )}
+      </div>
+      <div class="shrink-0 mx-1">
+        <span class="text-sm text-muted px-1">vs</span>
+      </div>
+      <div class="flex items-center gap-2 flex-1 min-w-0">
+        {awayFlag && (
+          <img src={awayFlag} alt="" class="w-7 h-5 object-cover shrink-0" />
+        )}
+        <span class="text-sm font-semibold text-white truncate">
+          {m.awayTeam.name}
+        </span>
+      </div>
+      <div class="shrink-0 text-right">
+        <span class="text-xs font-bold text-accent uppercase">
+          Pronosticar
+        </span>
+      </div>
+    </a>
+  );
+}
+
+export default function TodayMatches(props: { groups: Group[] }) {
+  const groups = props.groups;
   const now = new Date();
   const todayStr = now.toDateString();
 
   const todayMatches = groups
-    .flatMap((g) => g.matches.map((m) => ({ ...m, groupName: g.name })))
-    .filter((m) => {
-      const matchDate = new Date(m.matchDate);
-      return (
-        matchDate.toDateString() === todayStr &&
-        m.status === "scheduled" &&
-        matchDate > now
-      );
+    .flatMap(function(g) {
+      return g.matches.map(function(m) {
+        return Object.assign({}, m, { groupName: g.name });
+      });
     })
-    .sort((a, b) => new Date(a.matchDate).getTime() - new Date(b.matchDate).getTime());
+    .filter(function(m) {
+      const matchDate = new Date(m.matchDate);
+      return matchDate.toDateString() === todayStr
+        && m.status === "scheduled"
+        && matchDate > now;
+    })
+    .sort(function(a, b) {
+      return new Date(a.matchDate).getTime() - new Date(b.matchDate).getTime();
+    });
 
-  if (todayMatches.length === 0) return null;
+  if (todayMatches.length === 0) {
+    return null;
+  }
 
-  const rows = todayMatches.map((m) => {
-    const url = "/matches/" + m.id;
-    const homFlag = m.homeTeam.flag
-      ? <div class="w-7 aspect-[3/2] shrink-0"><img src={m.homeTeam.flag} alt="" class="w-full h-full object-cover" /></div>
-      : <div class="w-7 h-5 bg-zinc-800 rounded shrink-0" />;
-    const awayFlag = m.awayTeam.flag
-      ? <div class="w-7 aspect-[3/2] shrink-0"><img src={m.awayTeam.flag} alt="" class="w-full h-full object-cover" /></div>
-      : <div class="w-7 h-5 bg-zinc-800 rounded shrink-0" />;
-
-    return (
-      
-        key={m.id}
-        href={url}
-        class="flex items-center gap-3 px-4 py-3 hover:bg-accent-subtle/30 transition-colors group"
-      >
-        <div class="w-[90px] shrink-0">
-          <p class="text-[11px] font-bold text-accent-light tabular-nums">{formatTime(m.matchDate)}</p>
-          <p class="text-[10px] text-muted/60 uppercase tracking-wide">Grupo {m.groupName}</p>
-        </div>
-        <div class="flex items-center gap-2 flex-1 min-w-0 justify-end">
-          <span class="text-sm font-semibold text-white truncate text-right">{m.homeTeam.name}</span>
-          {homFlag}
-        </div>
-        <div class="flex items-center shrink-0 mx-1">
-          <span class="font-barlow font-black text-sm text-muted/50 px-1">vs</span>
-        </div>
-        <div class="flex items-center gap-2 flex-1 min-w-0">
-          {awayFlag}
-          <span class="text-sm font-semibold text-white truncate">{m.awayTeam.name}</span>
-        </div>
-        <div class="shrink-0 w-[80px] text-right">
-          <span class="text-[10px] font-bold text-accent uppercase tracking-wide">Pronosticar</span>
-        </div>
-      </a>
-    );
-  });
+  const count = todayMatches.length;
+  const label = count !== 1 ? "s" : "";
 
   return (
     <div class="mb-8">
       <div class="flex items-center justify-between mb-3">
         <div class="flex items-center gap-2">
-          <span class="text-base">📅</span>
+          <span>📅</span>
           <h2 class="font-barlow font-bold uppercase text-sm text-white tracking-wider">
             Partidos de hoy
           </h2>
         </div>
-        <span class="text-[10px] text-muted uppercase tracking-wider">
-          {todayMatches.length} partido{todayMatches.length !== 1 ? "s" : ""}
+        <span class="text-xs text-muted uppercase">
+          {count} partido{label}
         </span>
       </div>
       <div class="glass-card overflow-hidden divide-y divide-accent-border/15">
-        {rows}
+        {todayMatches.map(function(m) {
+          return <MatchRow m={m} />;
+        })}
       </div>
     </div>
   );
