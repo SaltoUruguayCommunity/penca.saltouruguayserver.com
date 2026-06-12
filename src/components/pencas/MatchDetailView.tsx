@@ -39,10 +39,12 @@ export default function MatchDetailView({ match, predictions: initialPredictions
   const [myPrediction, setMyPrediction] = useState<Prediction | null>(userPrediction);
   const [submitting, setSubmitting] = useState(false);
   const [timeLeft, setTimeLeft] = useState(() => new Date(match.matchDate).getTime() - Date.now());
+  const [currentStatus, setCurrentStatus] = useState(match.status);
+  const [currentScores, setCurrentScores] = useState({ homeScore: match.homeScore, awayScore: match.awayScore });
 
   const matchDate = new Date(match.matchDate);
   const now = new Date();
-  const isFinished = match.status === "finished";
+  const isFinished = currentStatus === "finished";
   const isLive = !isFinished && matchDate <= now;
   const isPast = isFinished || isLive;
   const canPredict = !isPast && !!user;
@@ -56,6 +58,34 @@ export default function MatchDetailView({ match, predictions: initialPredictions
     }, 1000);
     return () => clearInterval(id);
   }, [match.matchDate, isPast]);
+
+  useEffect(() => {
+    if (new Date(match.matchDate) > new Date()) return;
+    if (currentStatus === "finished") return;
+
+    let cancelled = false;
+
+    const refresh = async () => {
+      const res = await actions.pencas.getMatchDetail({ matchId: match.id });
+      if (cancelled || !res.data) return;
+
+      setPredictions(res.data.predictions as Prediction[]);
+      setCurrentScores({ homeScore: res.data.match?.homeScore ?? null, awayScore: res.data.match?.awayScore ?? null });
+      if (res.data.match?.status) {
+        setCurrentStatus(res.data.match.status);
+      }
+
+      const userId = user?.id;
+      if (userId) {
+        const updated = res.data.predictions.find((p) => p.userId === Number(userId)) ?? null;
+        if (updated) setMyPrediction(updated);
+      }
+    };
+
+    refresh();
+    const id = setInterval(refresh, 30000);
+    return () => { cancelled = true; clearInterval(id); };
+  }, [match.id, match.matchDate, user?.id]);
 
   function formatTime(ms: number) {
     const total = Math.max(0, ms);
@@ -221,7 +251,7 @@ export default function MatchDetailView({ match, predictions: initialPredictions
             <div class="font-barlow font-black text-2xl text-white">{totalPredictions}</div>
             <div class="text-[11px] text-muted uppercase tracking-wider font-semibold mt-1">Pronosticos</div>
           </div>
-          {isFinished && match.homeScore !== null && match.awayScore !== null && (
+          {isFinished && currentScores.homeScore !== null && currentScores.awayScore !== null && (
             <>
               <div class="glass-card p-5 text-center hover:shadow-[0_0_20px_rgba(139,92,246,0.1)] transition-all duration-300">
                 <BarChart3 class="h-5 w-5 mx-auto mb-2 text-accent" />
@@ -229,7 +259,7 @@ export default function MatchDetailView({ match, predictions: initialPredictions
                   {totalPredictions > 0
                     ? Math.round(
                       (predictions.filter(
-                        (p) => p.homeScore === match.homeScore && p.awayScore === match.awayScore,
+                        (p) => p.homeScore === currentScores.homeScore && p.awayScore === currentScores.awayScore,
                       ).length /
                         totalPredictions) *
                       100,
@@ -248,7 +278,7 @@ export default function MatchDetailView({ match, predictions: initialPredictions
                         const pHome = p.homeScore;
                         const pAway = p.awayScore;
                         const pHomeDiff = pHome > pAway ? 1 : pHome < pAway ? -1 : 0;
-                        const realHomeDiff = match.homeScore! > match.awayScore! ? 1 : match.homeScore! < match.awayScore! ? -1 : 0;
+                        const realHomeDiff = currentScores.homeScore! > currentScores.awayScore! ? 1 : currentScores.homeScore! < currentScores.awayScore! ? -1 : 0;
                         return pHomeDiff === realHomeDiff;
                       }).length /
                         totalPredictions) *
@@ -300,11 +330,11 @@ export default function MatchDetailView({ match, predictions: initialPredictions
                     .sort((a, b) => (b.points ?? 0) - (a.points ?? 0))
                     .map((p) => {
                       const isMe = user && p.userId === Number(user.id);
-                      const exactMatch = isFinished && match.homeScore === p.homeScore && match.awayScore === p.awayScore;
-                      const correctWinner = isFinished && !exactMatch && match.homeScore !== null && match.awayScore !== null && (
-                        (match.homeScore > match.awayScore && p.homeScore > p.awayScore) ||
-                        (match.homeScore < match.awayScore && p.homeScore < p.awayScore) ||
-                        (match.homeScore === match.awayScore && p.homeScore === p.awayScore)
+                      const exactMatch = isFinished && currentScores.homeScore === p.homeScore && currentScores.awayScore === p.awayScore;
+                      const correctWinner = isFinished && !exactMatch && currentScores.homeScore !== null && currentScores.awayScore !== null && (
+                        (currentScores.homeScore > currentScores.awayScore && p.homeScore > p.awayScore) ||
+                        (currentScores.homeScore < currentScores.awayScore && p.homeScore < p.awayScore) ||
+                        (currentScores.homeScore === currentScores.awayScore && p.homeScore === p.awayScore)
                       );
 
                       return (

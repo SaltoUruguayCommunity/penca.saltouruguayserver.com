@@ -44,10 +44,22 @@ export default function RecentMatches() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    actions.pencas.getLiveMatches().then((res) => {
-      if (res.data) setMatches(res.data as Match[]);
-      setLoading(false);
-    });
+    let cancelled = false;
+
+    const fetchMatches = () => {
+      actions.pencas.getLiveMatches().then((res) => {
+        if (cancelled) return;
+        if (res.data) setMatches(res.data as Match[]);
+        setLoading(false);
+      });
+    };
+
+    fetchMatches();
+    const id = setInterval(fetchMatches, 60000);
+    return () => {
+      cancelled = true;
+      clearInterval(id);
+    };
   }, []);
 
   if (loading) return (

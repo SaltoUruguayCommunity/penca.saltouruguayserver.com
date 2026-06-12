@@ -16,9 +16,15 @@ export default function LiveMatches() {
   const [matches, setMatches] = useState<Match[]>([]);
 
   useEffect(() => {
-    actions.pencas.getLiveMatches().then((res) => {
-      if (res.data) setMatches(res.data as Match[]);
-    });
+    const fetchMatches = () => {
+      actions.pencas.getLiveMatches().then((res) => {
+        if (res.data) setMatches(res.data as Match[]);
+      });
+    };
+
+    fetchMatches();
+    const id = setInterval(fetchMatches, 30000);
+    return () => clearInterval(id);
   }, []);
 
   if (matches.length === 0) return null;
