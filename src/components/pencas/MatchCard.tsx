@@ -40,7 +40,6 @@ export default function MatchCard({ match, prediction, user, onSubmit, submittin
   const now = new Date();
   const isFinished = match.status === "finished";
   const isLive = !isFinished && matchDate <= now;
-  const isPast = isFinished || isLive;
   const hasPrediction = prediction !== null;
 
   function handleSubmit(e: Event) {
