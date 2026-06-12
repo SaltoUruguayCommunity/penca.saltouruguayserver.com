@@ -74,3 +74,10 @@ export const WcMatchesRelations = relations(WcMatchesTable, ({ one }) => ({
   homeTeam: one(WcTeamsTable, { fields: [WcMatchesTable.homeTeamId], references: [WcTeamsTable.id], relationName: "homeTeam" }),
   awayTeam: one(WcTeamsTable, { fields: [WcMatchesTable.awayTeamId], references: [WcTeamsTable.id], relationName: "awayTeam" }),
 }));
+
+export const SyncMetadataTable = sqliteTable('sync_metadata', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  lastSyncedAt: text('last_synced_at'),
+  createdAt: text('created_at').notNull().default(sql`(current_timestamp)`),
+  updatedAt: text('updated_at').notNull().default(sql`(current_timestamp)`),
+});

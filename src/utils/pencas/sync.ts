@@ -4,6 +4,7 @@ import {
   WcMatchesTable,
   WcTeamsTable,
   WcPredictionsTable,
+  SyncMetadataTable,
 } from "../../db/schema";
 import {
   fetchCompetitionMatches,
@@ -216,5 +217,30 @@ export async function runFullSync(): Promise<{
 }> {
   const { updated: scoresUpdated } = await syncScoresFromApi();
   const { imported: autoImported, stage: nextStage } = await autoImportNextStage();
+
+  // Update last synced timestamp
+  const metadata = await client
+    .select()
+    .from(SyncMetadataTable)
+    .get();
+
+  if (metadata) {
+    await client
+      .update(SyncMetadataTable)
+      .set({
+        lastSyncedAt: sql`(current_timestamp)`,
+        updatedAt: sql`(current_timestamp)`,
+      })
+      .where(eq(SyncMetadataTable.id, metadata.id))
+      .run();
+  } else {
+    await client
+      .insert(SyncMetadataTable)
+      .values({
+        lastSyncedAt: sql`(current_timestamp)`,
+      })
+      .run();
+  }
+
   return { scoresUpdated, autoImported, nextStage };
 }

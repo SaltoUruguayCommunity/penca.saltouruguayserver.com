@@ -8,6 +8,7 @@ import {
   WcPredictionsTable,
   WcTeamsTable,
   UsersTable,
+  SyncMetadataTable,
 } from "../db/schema";
 import { calcPoints } from "../utils/pencas/scoring";
 import { rewardPrediction, rewardExactScore, getStreakMilestoneBonus } from "../utils/pencas/rewards";
@@ -493,6 +494,21 @@ export const pencas = {
         const orphaned = matches.filter((m) => !m.groupId).length;
 
         return { groups: byGroup, totalMatches, orphaned };
+      },
+    }),
+
+    getSyncMetadata: defineAction({
+      handler: async (_, { request, locals }) => {
+        await requireAdmin(locals);
+
+        const metadata = await client
+          .select()
+          .from(SyncMetadataTable)
+          .get();
+
+        return {
+          lastSyncedAt: metadata?.lastSyncedAt || null,
+        };
       },
     }),
   },

@@ -29,14 +29,23 @@ export default function PencasAdmin({ user }: Props) {
   const [calculating, setCalculating] = useState<number | null>(null);
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
   const [diagnosis, setDiagnosis] = useState<{ groups: Record<string, { total: number; withGroupId: number }>; totalMatches: number; orphaned: number } | null>(null);
+  const [lastSyncedAt, setLastSyncedAt] = useState<string | null>(null);
 
   async function loadMatches() {
     const res = await actions.pencas.getMatches({});
     if (res.data) setMatches(res.data as Match[]);
   }
 
+  async function loadSyncMetadata() {
+    const res = await actions.pencas.admin.getSyncMetadata();
+    if (res.data) {
+      setLastSyncedAt((res.data as { lastSyncedAt: string | null }).lastSyncedAt);
+    }
+  }
+
   useEffect(() => {
     loadMatches();
+    loadSyncMetadata();
   }, []);
 
   async function handleFetch() {
@@ -63,6 +72,7 @@ export default function PencasAdmin({ user }: Props) {
       const count = (res.data as { updated: number })?.updated ?? 0;
       setMessage({ type: "success", text: `Sincronización completa — ${count} partido${count !== 1 ? "s" : ""} actualizado${count !== 1 ? "s" : ""}` });
       await loadMatches();
+      await loadSyncMetadata();
     }
   }
 
@@ -226,11 +236,23 @@ export default function PencasAdmin({ user }: Props) {
 
       {/* Admin info */}
       {user && (
-        <div class="glass-card p-4 mb-6 flex items-center gap-3 glow-violet">
-          <img src={user.image ?? undefined} alt={user.name ?? "User avatar"} class="w-10 h-10 rounded-full object-cover" />
-          <div>
-            <p class="text-sm text-white font-semibold">{user.name}</p>
-            <p class="text-[11px] text-muted uppercase tracking-wider">Administrador</p>
+        <div class="glass-card p-4 mb-6">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-3">
+              <img src={user.image ?? undefined} alt={user.name ?? "User avatar"} class="w-10 h-10 rounded-full object-cover" />
+              <div>
+                <p class="text-sm text-white font-semibold">{user.name}</p>
+                <p class="text-[11px] text-muted uppercase tracking-wider">Administrador</p>
+              </div>
+            </div>
+            {lastSyncedAt && (
+              <div class="text-right">
+                <p class="text-[11px] text-muted uppercase tracking-wider">Última sincronización</p>
+                <p class="text-sm text-white font-semibold">
+                  {format(new Date(lastSyncedAt), "dd/MM/yyyy HH:mm", { locale: es })}
+                </p>
+              </div>
+            )}
           </div>
         </div>
       )}
