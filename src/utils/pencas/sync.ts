@@ -69,29 +69,47 @@ export async function syncScoresFromApi(): Promise<{ updated: number }> {
     return true;
   });
 
+  console.log("[cron] syncScoresFromApi: API total:", matchesRes.matches.length, "| filtered:", apiScored.length, "| teams in DB:", teams.length);
+
   let updated = 0;
 
   for (const apiMatch of apiScored) {
     const homeTeamId = teamByCode.get(apiMatch.homeTeam.tla);
     const awayTeamId = teamByCode.get(apiMatch.awayTeam.tla);
-    if (!homeTeamId || !awayTeamId) continue;
+    if (!homeTeamId || !awayTeamId) {
+      console.log("[cron] SKIP — team not found:", apiMatch.homeTeam.tla, "vs", apiMatch.awayTeam.tla);
+      continue;
+    }
 
+    const apiStage = mapStage(apiMatch.stage);
     const dbMatch = await client
       .select()
       .from(WcMatchesTable)
       .where(
         and(
-          eq(WcMatchesTable.matchDate, apiMatch.utcDate),
           eq(WcMatchesTable.homeTeamId, homeTeamId),
           eq(WcMatchesTable.awayTeamId, awayTeamId),
+          eq(WcMatchesTable.stage, apiStage),
         ),
       )
       .get();
 
-    if (!dbMatch) continue;
+    if (!dbMatch) {
+      console.log("[cron] SKIP — match not found in DB:", apiMatch.homeTeam.tla, "vs", apiMatch.awayTeam.tla, "| stage:", apiStage, "| date:", apiMatch.utcDate);
+      continue;
+    }
 
     const newStatus = mapStatus(apiMatch.status);
-    if (dbMatch.homeScore === apiMatch.score.fullTime.home && dbMatch.awayScore === apiMatch.score.fullTime.away && dbMatch.status === newStatus) continue;
+    if (dbMatch.status === "finished" && newStatus !== "finished") {
+      console.log("[cron] SKIP — won't revert finished match:", apiMatch.homeTeam.tla, "vs", apiMatch.awayTeam.tla);
+      continue;
+    }
+    if (dbMatch.homeScore === apiMatch.score.fullTime.home && dbMatch.awayScore === apiMatch.score.fullTime.away && dbMatch.status === newStatus) {
+      console.log("[cron] SKIP — already up to date:", apiMatch.homeTeam.tla, "vs", apiMatch.awayTeam.tla, "| DB:", dbMatch.homeScore, "-", dbMatch.awayScore, dbMatch.status, "| API:", apiMatch.score.fullTime.home, "-", apiMatch.score.fullTime.away, newStatus);
+      continue;
+    }
+
+    console.log("[cron] UPDATE:", apiMatch.homeTeam.tla, "vs", apiMatch.awayTeam.tla, "| DB:", dbMatch.homeScore, "-", dbMatch.awayScore, dbMatch.status, "→ API:", apiMatch.score.fullTime.home, "-", apiMatch.score.fullTime.away, newStatus);
 
     const hasScores = apiMatch.score.fullTime.home !== null && apiMatch.score.fullTime.away !== null;
     const setValues: Record<string, unknown> = {
@@ -115,6 +133,7 @@ export async function syncScoresFromApi(): Promise<{ updated: number }> {
     updated++;
   }
 
+  console.log("[cron] syncScoresFromApi: updated:", updated);
   return { updated };
 }
 
@@ -183,7 +202,7 @@ export async function autoImportNextStage(): Promise<{
             and(
               eq(WcMatchesTable.homeTeamId, homeTeamId.id),
               eq(WcMatchesTable.awayTeamId, awayTeamId.id),
-              eq(WcMatchesTable.matchDate, match.utcDate),
+              eq(WcMatchesTable.stage, mapStage(match.stage)),
             ),
           )
           .get();
