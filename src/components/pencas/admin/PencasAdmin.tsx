@@ -1,7 +1,7 @@
 import { useEffect, useState } from "preact/hooks";
 import { actions } from "astro:actions";
 import { RefreshCw, Trophy, Save, Calculator, CloudDownload, RotateCcw, Bug } from "lucide-preact";
-import { format } from "date-fns";
+import { format, parseISO } from "date-fns";
 import { es } from "date-fns/locale";
 import type { Session } from "@auth/core/types";
 
@@ -249,7 +249,7 @@ export default function PencasAdmin({ user }: Props) {
               <div class="text-right">
                 <p class="text-[11px] text-muted uppercase tracking-wider">Última sincronización</p>
                 <p class="text-sm text-white font-semibold">
-                  {format(new Date(lastSyncedAt), "dd/MM/yyyy HH:mm", { locale: es })}
+                  {format(parseISO(lastSyncedAt), "dd/MM/yyyy HH:mm", { locale: es })}
                 </p>
               </div>
             )}
