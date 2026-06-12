@@ -126,11 +126,11 @@ export default function RecentMatches() {
               {/* Score */}
               <div class="flex items-center gap-1.5 shrink-0 mx-1">
                 <span class={`font-barlow font-black text-lg tabular-nums w-6 text-center ${isLive ? "text-green-400" : "text-white"}`}>
-                  {m.homeScore ?? "–"}
+                  {m.homeScore ?? (isLive ? "0" : "–")}
                 </span>
                 <span class="text-muted/40 text-xs">:</span>
                 <span class={`font-barlow font-black text-lg tabular-nums w-6 text-center ${isLive ? "text-green-400" : "text-white"}`}>
-                  {m.awayScore ?? "–"}
+                  {m.awayScore ?? (isLive ? "0" : "–")}
                 </span>
               </div>
 

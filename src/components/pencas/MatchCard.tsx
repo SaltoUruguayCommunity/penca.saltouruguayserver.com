@@ -122,11 +122,11 @@ export default function MatchCard({ match, prediction, user, onSubmit, submittin
           ) : isLive ? (
             <div class="flex items-center gap-2.5">
               <span class="font-barlow font-black text-xl text-white tabular-nums w-8 text-center">
-                {match.homeScore ?? "-"}
+                {match.homeScore ?? "0"}
               </span>
               <span class="text-accent/50 font-bold">-</span>
               <span class="font-barlow font-black text-xl text-white tabular-nums w-8 text-center">
-                {match.awayScore ?? "-"}
+                {match.awayScore ?? "0"}
               </span>
             </div>
           ) : (

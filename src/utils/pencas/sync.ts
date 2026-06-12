@@ -63,9 +63,11 @@ export async function syncScoresFromApi(): Promise<{ updated: number }> {
 
   const teamByCode = new Map(teams.map((t) => [t.fifaCode, t.id]));
   const relevantStatuses = new Set(["IN_PLAY", "PAUSED", "FINISHED"]);
-  const apiScored = matchesRes.matches.filter(
-    (m) => relevantStatuses.has(m.status) && m.score.fullTime.home !== null && m.score.fullTime.away !== null,
-  );
+  const apiScored = matchesRes.matches.filter((m) => {
+    if (!relevantStatuses.has(m.status)) return false;
+    if (m.status === "FINISHED" && (m.score.fullTime.home === null || m.score.fullTime.away === null)) return false;
+    return true;
+  });
 
   let updated = 0;
 
@@ -91,14 +93,18 @@ export async function syncScoresFromApi(): Promise<{ updated: number }> {
     const newStatus = mapStatus(apiMatch.status);
     if (dbMatch.homeScore === apiMatch.score.fullTime.home && dbMatch.awayScore === apiMatch.score.fullTime.away && dbMatch.status === newStatus) continue;
 
+    const hasScores = apiMatch.score.fullTime.home !== null && apiMatch.score.fullTime.away !== null;
+    const setValues: Record<string, unknown> = {
+      status: newStatus,
+      updatedAt: sql`(current_timestamp)`,
+    };
+    if (hasScores) {
+      setValues.homeScore = apiMatch.score.fullTime.home;
+      setValues.awayScore = apiMatch.score.fullTime.away;
+    }
     await client
       .update(WcMatchesTable)
-      .set({
-        homeScore: apiMatch.score.fullTime.home,
-        awayScore: apiMatch.score.fullTime.away,
-        status: newStatus,
-        updatedAt: sql`(current_timestamp)`,
-      })
+      .set(setValues)
       .where(eq(WcMatchesTable.id, dbMatch.id))
       .run();
 

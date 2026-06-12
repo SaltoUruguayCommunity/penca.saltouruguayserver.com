@@ -54,11 +54,11 @@ export default function LiveMatches() {
 
             <div class="flex items-center gap-3 shrink-0 mx-4">
               <span class="font-barlow font-black text-xl text-white tabular-nums w-8 text-center">
-                {m.homeScore ?? "-"}
+                {m.homeScore ?? "0"}
               </span>
               <span class="text-green-accent/50 font-bold">-</span>
               <span class="font-barlow font-black text-xl text-white tabular-nums w-8 text-center">
-                {m.awayScore ?? "-"}
+                {m.awayScore ?? "0"}
               </span>
             </div>
 
