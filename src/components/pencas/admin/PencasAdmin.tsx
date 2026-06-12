@@ -22,6 +22,7 @@ type Props = {
 
 export default function PencasAdmin({ user }: Props) {
   const [matches, setMatches] = useState<Match[]>([]);
+  const [loadingMatches, setLoadingMatches] = useState(true);
   const [fetching, setFetching] = useState(false);
   const [syncing, setSyncing] = useState(false);
   const [saving, setSaving] = useState<number | null>(null);
@@ -32,8 +33,10 @@ export default function PencasAdmin({ user }: Props) {
   const [lastSyncedAt, setLastSyncedAt] = useState<string | null>(null);
 
   async function loadMatches() {
+    setLoadingMatches(true);
     const res = await actions.pencas.getMatches({});
     if (res.data) setMatches(res.data as Match[]);
+    setLoadingMatches(false);
   }
 
   async function loadSyncMetadata() {
@@ -249,7 +252,7 @@ export default function PencasAdmin({ user }: Props) {
               <div class="text-right">
                 <p class="text-[11px] text-muted uppercase tracking-wider">Última sincronización</p>
                 <p class="text-sm text-white font-semibold">
-                  {format(parseISO(lastSyncedAt), "dd/MM/yyyy HH:mm", { locale: es })}
+                  {format(parseISO(lastSyncedAt.includes('T') ? lastSyncedAt : lastSyncedAt.replace(' ', 'T') + 'Z'), "dd/MM/yyyy HH:mm", { locale: es })}
                 </p>
               </div>
             )}
@@ -272,7 +275,14 @@ export default function PencasAdmin({ user }: Props) {
               </tr>
             </thead>
             <tbody class="divide-y divide-accent-border/10">
-              {matches.length === 0 ? (
+              {loadingMatches ? (
+                <tr>
+                  <td colspan={6} class="text-center py-12 text-muted text-sm">
+                    <RefreshCw class="h-5 w-5 animate-spin mx-auto mb-2 text-accent" />
+                    Cargando partidos...
+                  </td>
+                </tr>
+              ) : matches.length === 0 ? (
                 <tr>
                   <td colspan={6} class="text-center py-12 text-muted text-sm">
                     No hay partidos. Importá desde la API primero.
