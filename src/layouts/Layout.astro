@@ -12,6 +12,7 @@ export interface Props {
   image?: string;
   noIndex?: boolean;
   ogType?: string;
+  showLiveBanner?: boolean;
 }
 
 const {
@@ -20,6 +21,7 @@ const {
   image,
   noIndex = false,
   ogType = "website",
+  showLiveBanner = false,
 } = Astro.props;
 
 const fullTitle = `${title} — ${SITE_NAME}`;
@@ -47,30 +49,36 @@ const origin = Astro.url.origin;
     <meta name="twitter:description" content={description} />
     {image && <meta name="twitter:image" content={image} />}
 
-    <script type="application/ld+json" set:html={JSON.stringify({
-  "@context": "https://schema.org",
-  "@type": "Organization",
-  "@id": "https://saltouruguayserver.com/#organization",
-  "name": "SaltoUruguayServer",
-  "url": "https://saltouruguayserver.com",
-  "sameAs": [
-    "https://instagram.com/saltouruguayserver",
-    "https://discord.gg/XwHSRRwnzS",
-    "https://twitch.tv/saltouruguayserver",
-    "https://x.com/SaltoUruguayS",
-    "https://github.com/yanquisalexander/saltouruguay-web",
-  ],
-})}></script>
-    <script type="application/ld+json" set:html={JSON.stringify({
-  "@context": "https://schema.org",
-  "@type": "WebSite",
-  "@id": `${origin}/#website`,
-  "url": origin,
-  "name": SITE_NAME,
-  "description": description,
-  "publisher": { "@id": "https://saltouruguayserver.com/#organization" },
-  "inLanguage": "es-UY",
-})}></script>
+    <script
+      type="application/ld+json"
+      set:html={JSON.stringify({
+        "@context": "https://schema.org",
+        "@type": "Organization",
+        "@id": "https://saltouruguayserver.com/#organization",
+        name: "SaltoUruguayServer",
+        url: "https://saltouruguayserver.com",
+        sameAs: [
+          "https://instagram.com/saltouruguayserver",
+          "https://discord.gg/XwHSRRwnzS",
+          "https://twitch.tv/saltouruguayserver",
+          "https://x.com/SaltoUruguayS",
+          "https://github.com/yanquisalexander/saltouruguay-web",
+        ],
+      })}
+    />
+    <script
+      type="application/ld+json"
+      set:html={JSON.stringify({
+        "@context": "https://schema.org",
+        "@type": "WebSite",
+        "@id": `${origin}/#website`,
+        url: origin,
+        name: SITE_NAME,
+        description: description,
+        publisher: { "@id": "https://saltouruguayserver.com/#organization" },
+        inLanguage: "es-UY",
+      })}
+    />
 
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -79,7 +87,18 @@ const origin = Astro.url.origin;
       rel="stylesheet"
     />
   </head>
-  <body class="min-h-screen antialiased">
+  <body class:list={["min-h-screen antialiased", showLiveBanner && "pt-10"]}>
+    {
+      showLiveBanner && (
+        <a
+          href="/en-vivo"
+          class="fixed top-0 left-0 right-0 z-[60] bg-sky-400 text-sky-950 text-center text-sm font-bold py-2.5 px-4 font-barlow tracking-wide hover:bg-sky-300 transition-colors shadow-lg"
+        >
+          ⚽ Uruguay est&aacute; jugando &mdash; Mir&aacute; el partido en vivo
+          &rarr;
+        </a>
+      )
+    }
     <slot />
     <Toaster client:load />
   </body>

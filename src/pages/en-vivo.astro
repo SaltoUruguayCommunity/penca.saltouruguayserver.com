@@ -1,0 +1,64 @@
+---
+import Layout from "../layouts/Layout.astro";
+import AntelTV from "../components/AntelTV.astro";
+
+const country = Astro.request.headers.get("x-vercel-ip-country");
+const isUruguayCountry = country === "UY";
+
+const forwarded = Astro.request.headers.get("x-forwarded-for");
+const realIp = Astro.request.headers.get("x-real-ip");
+const clientIp = forwarded?.split(",")[0]?.trim() || realIp || "";
+
+const isAntelISP =
+  clientIp === "" || clientIp.startsWith("179.") || clientIp.startsWith("167.");
+
+const isDev = import.meta.env.DEV;
+---
+
+<Layout
+  title="En Vivo"
+  description="Mirá el partido de Uruguay en vivo por AntelTV Canal 5"
+  showLiveBanner={false}
+>
+  <div class="h-dvh relative">
+    <nav
+      class="absolute top-0 left-0 right-0 flex items-center h-10 px-4 gap-3 bg-black/60 backdrop-blur-sm border-b border-white/10 z-10"
+    >
+      <a
+        href="/"
+        class="flex items-center gap-2 font-barlow font-black tracking-tight group shrink-0"
+      >
+        <img
+          src="/images/logo_salto.webp"
+          alt="SaltoUruguayServer"
+          class="h-6 w-auto object-contain transition-transform duration-300 group-hover:scale-110"
+        />
+        <span class="text-lg"
+          ><span class="text-white">EN </span><span class="text-accent"
+            >VIVO</span
+          ></span
+        >
+      </a>
+
+      <div class="ml-auto flex items-center gap-4">
+        <a
+          href="/"
+          class="text-xs font-semibold uppercase tracking-wider text-muted hover:text-white transition font-teko"
+          >Inicio</a
+        >
+        <a
+          href="/pronosticos"
+          class="text-xs font-semibold uppercase tracking-wider text-muted hover:text-white transition font-teko"
+          >Pronosticos</a
+        >
+      </div>
+    </nav>
+
+    <div class="h-full pt-10 box-border">
+      <AntelTV
+        isUruguayCountry={isDev ? true : isUruguayCountry}
+        isAntelISP={isDev ? true : isAntelISP}
+      />
+    </div>
+  </div>
+</Layout>

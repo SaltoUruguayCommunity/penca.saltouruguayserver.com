@@ -24,6 +24,7 @@
     "canvas-confetti": "^1.9.4",
     "date-fns": "^4.4.0",
     "drizzle-orm": "^0.45.2",
+    "hls.js": "^1.6.16",
     "lucide-preact": "^1.17.0",
     "preact": "^10.29.2",
     "tailwindcss": "^4.3.0",

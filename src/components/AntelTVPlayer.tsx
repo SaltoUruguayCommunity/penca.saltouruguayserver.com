@@ -1,0 +1,240 @@
+import { useEffect, useRef, useState } from "preact/hooks";
+import { actions } from "astro:actions";
+import Hls from "hls.js";
+import AntelTVLogo from "../images/AntelTVLogo.tsx";
+
+const PUBLIC_ID = "2s6nd";
+
+export function AntelTVPlayer() {
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const hideTimer = useRef<number>(0);
+  const [status, setStatus] = useState<"loading" | "ready" | "error">("loading");
+  const [playing, setPlaying] = useState(false);
+  const [fullscreen, setFullscreen] = useState(false);
+  const [showControls, setShowControls] = useState(true);
+
+  const togglePlay = () => {
+    const v = videoRef.current;
+    if (!v) return;
+    if (v.paused) {
+      v.play().catch(() => { });
+      setPlaying(true);
+    } else {
+      v.pause();
+      setPlaying(false);
+    }
+  };
+
+  const toggleFullscreen = () => {
+    const el = containerRef.current;
+    if (!el) return;
+    if (document.fullscreenElement) {
+      document.exitFullscreen();
+    } else {
+      el.requestFullscreen();
+    }
+  };
+
+  const showControlsTemporarily = () => {
+    setShowControls(true);
+    clearTimeout(hideTimer.current);
+    hideTimer.current = window.setTimeout(() => setShowControls(false), 3000);
+  };
+
+  useEffect(() => {
+    let hlsInstance: Hls | null = null;
+    let cancelled = false;
+
+    const timeout = setTimeout(() => {
+      if (!cancelled) {
+        setStatus("error");
+      }
+    }, 20000);
+
+    async function init() {
+      try {
+        const res = await actions.anteltv.getPlaybackUrl({ publicId: PUBLIC_ID });
+        if (cancelled) return;
+        clearTimeout(timeout);
+
+        if (res.error) throw new Error(res.error.message);
+
+        const playbackUrl = res.data!.playbackUrl;
+        const video = videoRef.current;
+        if (!video) return;
+
+        if (Hls.isSupported()) {
+          hlsInstance = new Hls();
+          hlsInstance.loadSource(playbackUrl);
+          hlsInstance.attachMedia(video);
+          hlsInstance.on(Hls.Events.MANIFEST_PARSED, () => {
+            video.play().catch(() => { });
+            setStatus("ready");
+          });
+          hlsInstance.on(Hls.Events.ERROR, (_event, data) => {
+            if (data.fatal) setStatus("error");
+          });
+        } else if (video.canPlayType("application/vnd.apple.mpegurl")) {
+          video.src = playbackUrl;
+          video.addEventListener("loadedmetadata", () => {
+            video.play().catch(() => { });
+            setStatus("ready");
+          });
+        } else {
+          throw new Error("HLS no soportado en este navegador");
+        }
+      } catch (err) {
+        if (!cancelled) {
+          console.error("AntelTVPlayer error:", err);
+          setStatus("error");
+        }
+      }
+    }
+
+    init();
+
+    const onFullscreenChange = () => setFullscreen(!!document.fullscreenElement);
+    document.addEventListener("fullscreenchange", onFullscreenChange);
+
+    return () => {
+      document.removeEventListener("fullscreenchange", onFullscreenChange);
+      cancelled = true;
+      clearTimeout(timeout);
+      if (hlsInstance) hlsInstance.destroy();
+    };
+  }, []);
+
+  return (
+    <div
+      ref={containerRef}
+      class="relative w-full h-full bg-black overflow-hidden group"
+      onMouseMove={showControlsTemporarily}
+      onMouseLeave={() => setShowControls(false)}
+    >
+      {/* Video siempre montado para que el ref exista */}
+      <video
+        ref={videoRef}
+        playsinline
+        muted
+        class="w-full h-full object-cover cursor-pointer"
+        style={{ display: status === "ready" ? "block" : "none" }}
+        onClick={status === "ready" ? togglePlay : undefined}
+        onLoadedData={() => setPlaying(true)}
+      />
+
+      {/* Loading overlay */}
+      {status === "loading" && (
+        <div class="absolute inset-0 bg-[#0a0a0a] flex flex-col items-center justify-center overflow-hidden">
+          <div class="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_rgba(139,92,246,0.08),_transparent_70%)]" />
+          <div class="flex flex-col items-center gap-6 relative z-10">
+            <div class="w-12 h-12 rounded-full border-2 border-accent/30 border-t-accent animate-spin" />
+            <div class="text-center">
+              <p class="text-lg font-barlow font-semibold text-white/80">Cargando transmisión</p>
+              <p class="text-xs text-white/30 font-mono mt-1">Canal 5 &middot; AntelTV</p>
+            </div>
+          </div>
+          <div class="absolute bottom-0 left-0 right-0 h-0.5 bg-white/5">
+            <div class="h-full w-full bg-accent origin-left animate-[loadingBar_2s_ease-in-out_infinite]" />
+          </div>
+          <style>{`
+            @keyframes loadingBar {
+              0% { transform: scaleX(0); transform-origin: left; }
+              50% { transform: scaleX(1); transform-origin: left; }
+              51% { transform: scaleX(1); transform-origin: right; }
+              100% { transform: scaleX(0); transform-origin: right; }
+            }
+          `}</style>
+        </div>
+      )}
+
+      {/* Error overlay */}
+      {status === "error" && (
+        <div class="absolute inset-0 bg-[#0a0a0a] flex flex-col items-center justify-center overflow-hidden">
+          <div class="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_rgba(239,68,68,0.06),_transparent_70%)]" />
+          <div class="flex flex-col items-center gap-5 relative z-10">
+            <div class="w-16 h-16 rounded-full bg-red-500/10 flex items-center justify-center">
+              <svg class="w-7 h-7 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width={1.5} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+              </svg>
+            </div>
+            <div class="text-center">
+              <p class="text-base font-barlow font-semibold text-red-400">Error de transmisión</p>
+              <p class="text-xs text-white/30 font-mono mt-1">No se pudo cargar el stream de AntelTV</p>
+            </div>
+            <button
+              onClick={() => window.location.reload()}
+              class="px-5 py-2 text-xs font-semibold uppercase tracking-widest text-white bg-white/10 hover:bg-white/15 rounded-lg transition font-teko"
+            >
+              Reintentar
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Center play/pause overlay */}
+      {status === "ready" && (
+        <div
+          class="absolute inset-0 flex items-center justify-center transition-opacity duration-300 cursor-pointer"
+          style={{ opacity: showControls ? 1 : 0 }}
+          onClick={togglePlay}
+        >
+          <div class="w-16 h-16 rounded-full bg-white/10 backdrop-blur-md flex items-center justify-center transition-transform duration-200 hover:scale-110">
+            {playing ? (
+              <svg class="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M6 4h4v16H6V4zm8 0h4v16h-4V4z" />
+              </svg>
+            ) : (
+              <svg class="w-6 h-6 text-white ml-1" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M8 5v14l11-7z" />
+              </svg>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Bottom controls bar */}
+      {status === "ready" && (
+        <div
+          class="absolute bottom-0 left-0 right-0 transition-opacity duration-300"
+          style={{ opacity: showControls ? 1 : 0 }}
+        >
+          <div class="bg-gradient-to-t from-black/80 via-black/40 to-transparent pt-10 pb-0">
+            <div class="bg-surface/40 backdrop-blur-md border-t border-white/5 px-4 md:px-6 py-2 flex items-center justify-between">
+              <div class="flex items-center gap-3">
+                <button onClick={togglePlay} class="text-white/70 hover:text-white transition p-1">
+                  {playing ? (
+                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M6 4h4v16H6V4zm8 0h4v16h-4V4z" />
+                    </svg>
+                  ) : (
+                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M8 5v14l11-7z" />
+                    </svg>
+                  )}
+                </button>
+                <span class="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-red-500/15 text-[10px] font-bold uppercase tracking-wider text-red-400">
+                  <span class="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
+                  EN VIVO
+                </span>
+                <span class="text-sm font-semibold text-white/70 font-barlow hidden sm:inline">Canal 5</span>
+              </div>
+              <div class="flex items-center gap-3">
+                <AntelTVLogo class="h-8 w-auto opacity-50 hover:opacity-100 transition-opacity" />
+                <button onClick={toggleFullscreen} class="text-white/70 hover:text-white transition p-1">
+                  <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    {fullscreen ? (
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width={2} d="M9 9V4.5M9 9H4.5M9 9L3.75 3.75M9 15v4.5M9 15H4.5M9 15l-5.25 5.25M15 9h4.5M15 9V4.5M15 9l5.25-5.25M15 15h4.5M15 15v4.5m0-4.5l5.25 5.25" />
+                    ) : (
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width={2} d="M3.75 3.75v4.5m0-4.5h4.5m-4.5 0L9 9M3.75 20.25v-4.5m0 4.5h4.5m-4.5 0L9 15M20.25 3.75h-4.5m4.5 0v4.5m0-4.5L15 9m5.25 11.25h-4.5m4.5 0v-4.5m0 4.5L15 15" />
+                    )}
+                  </svg>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
