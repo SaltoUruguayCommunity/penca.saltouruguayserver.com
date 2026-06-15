@@ -2,15 +2,19 @@
 import Layout from "../layouts/Layout.astro";
 import AntelTV from "../components/AntelTV.astro";
 
-const country = Astro.request.headers.get("x-vercel-ip-country");
-const isUruguayCountry = country === "UY";
+const country = Astro.request.headers
+  .get("x-vercel-ip-country")
+  ?.trim()
+  .toUpperCase();
 
 const forwarded = Astro.request.headers.get("x-forwarded-for");
 const realIp = Astro.request.headers.get("x-real-ip");
 const clientIp = forwarded?.split(",")[0]?.trim() || realIp || "";
 
 const isAntelISP =
-  clientIp === "" || clientIp.startsWith("179.") || clientIp.startsWith("167.");
+  clientIp.startsWith("179.") || clientIp.startsWith("167.");
+
+const isUruguayCountry = country === "UY" || isAntelISP;
 
 const isDev = import.meta.env.DEV;
 ---
