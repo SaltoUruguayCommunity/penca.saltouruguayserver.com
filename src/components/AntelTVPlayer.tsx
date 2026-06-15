@@ -4,6 +4,7 @@ import Hls from "hls.js";
 import AntelTVLogo from "../images/AntelTVLogo.tsx";
 
 const PUBLIC_ID = "2s6nd";
+const FALLBACK_IFRAME_URL = "https://anteltv.com.uy/play/2s6nd";
 
 export function AntelTVPlayer() {
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -41,6 +42,8 @@ export function AntelTVPlayer() {
     clearTimeout(hideTimer.current);
     hideTimer.current = window.setTimeout(() => setShowControls(false), 3000);
   };
+
+  const isFallback = status === "error";
 
   useEffect(() => {
     let hlsInstance: Hls | null = null;
@@ -148,28 +151,15 @@ export function AntelTVPlayer() {
         </div>
       )}
 
-      {/* Error overlay */}
-      {status === "error" && (
-        <div class="absolute inset-0 bg-[#0a0a0a] flex flex-col items-center justify-center overflow-hidden">
-          <div class="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_rgba(239,68,68,0.06),_transparent_70%)]" />
-          <div class="flex flex-col items-center gap-5 relative z-10">
-            <div class="w-16 h-16 rounded-full bg-red-500/10 flex items-center justify-center">
-              <svg class="w-7 h-7 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width={1.5} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
-              </svg>
-            </div>
-            <div class="text-center">
-              <p class="text-base font-barlow font-semibold text-red-400">Error de transmisión</p>
-              <p class="text-xs text-white/30 font-mono mt-1">No se pudo cargar el stream de AntelTV</p>
-            </div>
-            <button
-              onClick={() => window.location.reload()}
-              class="px-5 py-2 text-xs font-semibold uppercase tracking-widest text-white bg-white/10 hover:bg-white/15 rounded-lg transition font-teko"
-            >
-              Reintentar
-            </button>
-          </div>
-        </div>
+      {/* Fallback iframe */}
+      {isFallback && (
+        <iframe
+          src={FALLBACK_IFRAME_URL}
+          title="AntelTV fallback"
+          class="absolute inset-0 w-full h-full border-0 bg-black"
+          allow="autoplay; fullscreen; picture-in-picture"
+          loading="eager"
+        />
       )}
 
       {/* Center play/pause overlay */}

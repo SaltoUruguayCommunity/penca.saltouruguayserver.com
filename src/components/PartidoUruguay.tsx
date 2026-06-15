@@ -1,11 +1,11 @@
 import { AntelTVPlayer } from "./AntelTVPlayer.tsx";
 
 interface PartidoUruguayProps {
-    isUruguayCountry: boolean;
+    isAntelISP: boolean;
 }
 
-export const PartidoUruguay = ({ isUruguayCountry }: PartidoUruguayProps) => {
-    if (!isUruguayCountry) {
+export const PartidoUruguay = ({ isAntelISP }: PartidoUruguayProps) => {
+    if (!isAntelISP) {
         return null;
     }
 

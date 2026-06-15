@@ -2,17 +2,17 @@
 import { AntelTVPlayer } from "./AntelTVPlayer.tsx";
 
 interface Props {
-  isUruguayCountry: boolean;
+  isAntelISP: boolean;
 }
 
-const { isUruguayCountry } = Astro.props;
+const { isAntelISP } = Astro.props;
 ---
 
 {
-  !isUruguayCountry ? (
+  !isAntelISP ? (
     <div class="flex items-center justify-center h-full min-h-[200px]">
       <p class="text-sm text-white/40 font-mono">
-        Contenido no disponible en tu regi&oacute;n
+        Partido en vivo solo disponible para usuarios de Antel
       </p>
     </div>
   ) : (

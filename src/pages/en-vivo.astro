@@ -1,18 +1,11 @@
 ---
 import Layout from "../layouts/Layout.astro";
 import AntelTV from "../components/AntelTV.astro";
-import {
-  getClientIp,
-  getVisitorCountry,
-  isAntelNetwork,
-} from "../lib/visitor-location";
+import { getClientIp, isAntelNetwork } from "../lib/visitor-location";
 
 const headers = Astro.request.headers;
-const country = getVisitorCountry(headers, Astro.request);
 const clientIp = getClientIp(headers);
 const isAntelISP = isAntelNetwork(headers, clientIp, Astro.request);
-
-const isUruguayCountry = country === "UY" || isAntelISP;
 
 const isDev = import.meta.env.DEV;
 ---
@@ -57,7 +50,7 @@ const isDev = import.meta.env.DEV;
     </nav>
 
     <div class="h-full pt-10 box-border">
-      <AntelTV isUruguayCountry={isDev ? true : isUruguayCountry} />
+      <AntelTV isAntelISP={isDev ? true : isAntelISP} />
     </div>
   </div>
 </Layout>
