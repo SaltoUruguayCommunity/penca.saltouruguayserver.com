@@ -7,6 +7,7 @@ import Leaderboard from "./Leaderboard";
 import LoginButton from "./LoginButton";
 import RecentMatches from "./RecentMatches";
 import QuickPredict from "./QuickPredict";
+import TodayMatches from "./TodayMatches";
 
 type Group = {
   id: number;
@@ -73,8 +74,6 @@ export default function PencasApp({ user }: Props) {
   }, [user]);
 
   async function handleSubmit(matchId: number, homeScore: number, awayScore: number) {
-
-
     setPredictions((prev) => ({
       ...prev,
       [matchId]: { homeScore, awayScore },
@@ -134,6 +133,7 @@ export default function PencasApp({ user }: Props) {
         </div>
       </div>
 
+      <TodayMatches groups={groups} />
       <RecentMatches />
 
       <QuickPredict
