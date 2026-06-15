@@ -1,5 +1,6 @@
 import { ActionError, defineAction } from "astro:actions";
 import { z } from "astro:schema";
+import { getClientIp } from "../lib/visitor-location";
 
 const API_SESIONES = "https://veratv-be.vera.com.uy/api/sesiones";
 const API_SETUP = "https://veratv-be.vera.com.uy/api/setup";
@@ -10,9 +11,7 @@ export const anteltv = {
       publicId: z.string(),
     }),
     handler: async ({ publicId }, { request }) => {
-      const forwarded = request.headers.get("x-forwarded-for");
-      const realIp = request.headers.get("x-real-ip");
-      const clientIp = forwarded?.split(",")[0]?.trim() || realIp || "";
+      const clientIp = getClientIp(request.headers);
 
       const commonHeaders: Record<string, string> = {
         Accept: "application/json",
