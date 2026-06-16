@@ -15,6 +15,8 @@ export function AntelTVPlayer() {
   const [playing, setPlaying] = useState(false);
   const [fullscreen, setFullscreen] = useState(false);
   const [showControls, setShowControls] = useState(true);
+  const [muted, setMuted] = useState(true);
+  const [volume, setVolume] = useState(0.5);
 
   const togglePlay = () => {
     const v = videoRef.current;
@@ -114,12 +116,20 @@ export function AntelTVPlayer() {
     document.addEventListener("fullscreenchange", onFullscreenChange);
 
     return () => {
+
       document.removeEventListener("fullscreenchange", onFullscreenChange);
       cancelled = true;
       clearTimeout(timeout);
       if (hlsInstance) hlsInstance.destroy();
     };
   }, []);
+
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+    video.muted = muted;
+    if (!muted) video.volume = volume;
+  }, [muted, volume]);
 
   return (
     <div
@@ -132,7 +142,7 @@ export function AntelTVPlayer() {
       <video
         ref={videoRef}
         playsinline
-        muted
+        muted={muted}
         class="w-full h-full object-cover cursor-pointer"
         style={{ display: status === "ready" ? "block" : "none" }}
         onClick={status === "ready" ? togglePlay : undefined}
@@ -203,7 +213,7 @@ export function AntelTVPlayer() {
         >
           <div class="bg-gradient-to-t from-black/80 via-black/40 to-transparent pt-10 pb-0">
             <div class="bg-surface/40 backdrop-blur-md border-t border-white/5 px-4 md:px-6 py-2 flex items-center justify-between">
-              <div class="flex items-center gap-3">
+              <div class="flex items-center gap-1">
                 <button onClick={togglePlay} class="text-white/70 hover:text-white transition p-1">
                   {playing ? (
                     <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
@@ -215,6 +225,52 @@ export function AntelTVPlayer() {
                     </svg>
                   )}
                 </button>
+
+                <button
+                  onClick={() => setMuted((m) => !m)}
+                  class="text-white/70 hover:text-white transition p-1"
+                  title={muted ? "Desilenciar" : "Silenciar"}
+                >
+                  {muted || volume === 0 ? (
+                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width={2}>
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M11 5L6 9H2v6h4l5 4V5z" />
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M23 9l-6 6" />
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M17 9l6 6" />
+                    </svg>
+                  ) : volume < 0.5 ? (
+                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width={2}>
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M11 5L6 9H2v6h4l5 4V5z" />
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M15.54 8.46a5 5 0 010 7.07" />
+                    </svg>
+                  ) : (
+                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width={2}>
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M11 5L6 9H2v6h4l5 4V5z" />
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M19.07 4.93a10 10 0 010 14.14" />
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M15.54 8.46a5 5 0 010 7.07" />
+                    </svg>
+                  )}
+                </button>
+
+                <div class="hidden sm:flex items-center w-20">
+                  <input
+                    type="range"
+                    min="0"
+                    max="1"
+                    step="0.05"
+                    value={muted ? 0 : volume}
+                    onInput={(e) => {
+                      const v = parseFloat((e.target as HTMLInputElement).value);
+                      setVolume(v);
+                      if (v > 0) setMuted(false);
+                      else setMuted(true);
+                    }}
+                    class="w-full h-1 appearance-none bg-white/20 rounded-full cursor-pointer
+                      [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:shadow-md
+                      [&::-moz-range-thumb]:w-3 [&::-moz-range-thumb]:h-3 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:bg-white [&::-moz-range-thumb]:border-0
+                      hover:bg-white/30 transition-colors"
+                  />
+                </div>
+
                 <span class="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-red-500/15 text-[10px] font-bold uppercase tracking-wider text-red-400">
                   <span class="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
                   EN VIVO
