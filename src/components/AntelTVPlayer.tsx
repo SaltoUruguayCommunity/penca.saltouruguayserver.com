@@ -1,10 +1,11 @@
 import { useEffect, useRef, useState } from "preact/hooks";
-import { actions } from "astro:actions";
 import Hls from "hls.js";
 import AntelTVLogo from "../images/AntelTVLogo.tsx";
 
 const PUBLIC_ID = "2s6nd";
-const FALLBACK_IFRAME_URL = "https://anteltv.com.uy/play/2s6nd";
+const API_SESIONES = "https://veratv-be.vera.com.uy/api/sesiones";
+const API_SETUP = "https://veratv-be.vera.com.uy/api/setup";
+const FALLBACK_URL = "https://anteltv.com.uy/play/2s6nd";
 
 export function AntelTVPlayer() {
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -37,13 +38,13 @@ export function AntelTVPlayer() {
     }
   };
 
+  const isFallback = status === "error";
+
   const showControlsTemporarily = () => {
     setShowControls(true);
     clearTimeout(hideTimer.current);
     hideTimer.current = window.setTimeout(() => setShowControls(false), 3000);
   };
-
-  const isFallback = status === "error";
 
   useEffect(() => {
     let hlsInstance: Hls | null = null;
@@ -57,13 +58,25 @@ export function AntelTVPlayer() {
 
     async function init() {
       try {
-        const res = await actions.anteltv.getPlaybackUrl({ publicId: PUBLIC_ID });
+        const sesRes = await fetch(API_SESIONES, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ tipo: "anonima" }),
+        });
+        if (cancelled) return;
+        if (!sesRes.ok) throw new Error("Error al crear sesión");
+        const { token } = await sesRes.json();
+
+        const setupRes = await fetch(`${API_SETUP}?token=${token}&public_id=${PUBLIC_ID}`);
         if (cancelled) return;
         clearTimeout(timeout);
+        if (!setupRes.ok) throw new Error("Error al obtener URL de reproducción");
+        const setupData = await setupRes.json();
+        if (setupData.url?.status !== "OK" || !setupData.url?.suggested?.url) {
+          throw new Error("Stream no disponible");
+        }
 
-        if (res.error) throw new Error(res.error.message);
-
-        const playbackUrl = res.data!.playbackUrl;
+        const playbackUrl = setupData.url.suggested.url;
         const video = videoRef.current;
         if (!video) return;
 
@@ -154,11 +167,10 @@ export function AntelTVPlayer() {
       {/* Fallback iframe */}
       {isFallback && (
         <iframe
-          src={FALLBACK_IFRAME_URL}
-          title="AntelTV fallback"
+          src={FALLBACK_URL}
+          title="AntelTV"
           class="absolute inset-0 w-full h-full border-0 bg-black"
           allow="autoplay; fullscreen; picture-in-picture"
-          loading="eager"
         />
       )}
 
