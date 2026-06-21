@@ -1,25 +1,16 @@
 ---
 import Layout from "../layouts/Layout.astro";
-import { pencas } from "../actions/pencas";
 
 const { user } = Astro.locals;
 if (user) {
   return Astro.redirect("/pronosticos", 302);
 }
-
-const liveResult = await Astro.callAction(pencas.getLiveMatches);
-const uruguayPlaying = !liveResult.error
-  ? liveResult.data.some(
-      (m) => m.homeTeam?.name === "Uruguay" || m.awayTeam?.name === "Uruguay",
-    )
-  : false;
 ---
 
 <Layout
   title="Penca Mundial 2026"
   description="Pronosticá los partidos del Mundial 2026, acumulá puntos y competí contra otros hinchas en el ranking de SaltoUruguayServer."
   image="/og-default.png"
-  showLiveBanner={uruguayPlaying}
 >
   <!-- ===== NAV ===== -->
   <nav

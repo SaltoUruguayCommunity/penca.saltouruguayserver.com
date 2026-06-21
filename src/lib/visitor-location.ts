@@ -1,10 +1,3 @@
-type RequestWithCf = Request & {
-    cf?: {
-        country?: string;
-        asOrganization?: string;
-    };
-};
-
 const COUNTRY_HEADER_KEYS = ["cf-ipcountry", "x-vercel-ip-country", "x-country-code", "x-country"];
 const CLIENT_IP_HEADER_KEYS = ["cf-connecting-ip", "true-client-ip", "x-real-ip", "x-client-ip"];
 
@@ -21,11 +14,8 @@ function getHeaderValue(headers: Headers, keys: string[]) {
     return "";
 }
 
-export function getVisitorCountry(headers: Headers, request?: Request) {
-    const cfCountry = request ? normalizeCountry((request as RequestWithCf).cf?.country) : "";
-    const headerCountry = normalizeCountry(getHeaderValue(headers, COUNTRY_HEADER_KEYS));
-
-    return cfCountry || headerCountry;
+export function getVisitorCountry(headers: Headers) {
+    return normalizeCountry(getHeaderValue(headers, COUNTRY_HEADER_KEYS));
 }
 
 export function getClientIp(headers: Headers) {
@@ -36,9 +26,37 @@ export function getClientIp(headers: Headers) {
     return forwardedFor ?? "";
 }
 
-export function isAntelNetwork(headers: Headers, clientIp: string, request?: Request) {
-    const organization = request ? (request as RequestWithCf).cf?.asOrganization?.toLowerCase() ?? "" : "";
-    if (organization.includes("antel")) return true;
+interface IpWhoResponse {
+    success: boolean;
+    ip: string;
+    country?: string;
+    connection?: {
+        asn?: number;
+        org?: string;
+        isp?: string;
+    };
+}
 
-    return clientIp.startsWith("179.") || clientIp.startsWith("167.");
+const ANTEL_KEYWORDS = ["antel", "administración nacional de telecomunicaciones"];
+
+export async function isAntelNetwork(clientIp: string): Promise<boolean> {
+    if (import.meta.env.DEV) return true; // Avoid unnecessary API calls during development
+    if (!clientIp) return false;
+
+    try {
+        const res = await fetch(`https://ipwho.is/${clientIp}?fields=ip,connection.org,connection.isp`, {
+            signal: AbortSignal.timeout(3000),
+        });
+        if (!res.ok) return false;
+
+        const data: IpWhoResponse = await res.json();
+        if (!data.success) return false;
+
+        const org = data.connection?.org?.toLowerCase() ?? "";
+        const isp = data.connection?.isp?.toLowerCase() ?? "";
+
+        return ANTEL_KEYWORDS.some((kw) => org.includes(kw) || isp.includes(kw));
+    } catch {
+        return false;
+    }
 }

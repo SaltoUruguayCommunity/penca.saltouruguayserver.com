@@ -5,7 +5,7 @@ import { getClientIp, isAntelNetwork } from "../lib/visitor-location";
 
 const headers = Astro.request.headers;
 const clientIp = getClientIp(headers);
-const isAntelISP = isAntelNetwork(headers, clientIp, Astro.request);
+const isAntelISP = await isAntelNetwork(clientIp);
 
 const isDev = import.meta.env.DEV;
 ---
@@ -13,7 +13,7 @@ const isDev = import.meta.env.DEV;
 <Layout
   title="En Vivo"
   description="Mirá el partido de Uruguay en vivo por AntelTV Canal 5"
-  showLiveBanner={false}
+  ignoreLiveBox={true}
 >
   <div class="h-dvh relative">
     <nav

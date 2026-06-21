@@ -1,22 +1,13 @@
 ---
 import Layout from "../layouts/Layout.astro";
 import PencasApp from "../components/pencas/PencasApp.tsx";
-import { pencas } from "../actions/pencas";
 
 const { user } = Astro.locals;
-
-const liveResult = await Astro.callAction(pencas.getLiveMatches);
-const uruguayPlaying = !liveResult.error
-  ? liveResult.data.some(
-      (m) => m.homeTeam?.name === "Uruguay" || m.awayTeam?.name === "Uruguay",
-    )
-  : false;
 ---
 
 <Layout
   title="Pronosticos"
   description="Tus pronósticos para la Penca Mundial 2026 — ingresá resultados, acumulá puntos y seguí el ranking."
-  showLiveBanner={uruguayPlaying}
 >
   <div class="min-h-screen">
     <!-- Ambient Background -->

@@ -1,6 +1,9 @@
 ---
 import "../styles/global.css";
 import Toaster from "../components/ui/Toast.tsx";
+import LiveBox from "../components/LiveBox.tsx";
+import { pencas } from "../actions/pencas";
+import { getClientIp, isAntelNetwork } from "../lib/visitor-location";
 
 const SITE_NAME = "Penca Mundial 2026";
 const DEFAULT_DESC =
@@ -12,7 +15,7 @@ export interface Props {
   image?: string;
   noIndex?: boolean;
   ogType?: string;
-  showLiveBanner?: boolean;
+  ignoreLiveBox?: boolean;
 }
 
 const {
@@ -21,12 +24,23 @@ const {
   image,
   noIndex = false,
   ogType = "website",
-  showLiveBanner = false,
+  ignoreLiveBox = false,
 } = Astro.props;
 
 const fullTitle = `${title} — ${SITE_NAME}`;
 const url = Astro.url.href;
 const origin = Astro.url.origin;
+
+const headers = Astro.request.headers;
+const clientIp = getClientIp(headers);
+const isAntelISP = await isAntelNetwork(clientIp);
+
+const liveResult = await Astro.callAction(pencas.getLiveMatches, null);
+const uruguayMatch = !liveResult.error
+  ? liveResult.data.find(
+      (m) => m.homeTeam?.name === "Uruguay" || m.awayTeam?.name === "Uruguay",
+    )
+  : null;
 ---
 
 <!doctype html>
@@ -87,20 +101,20 @@ const origin = Astro.url.origin;
       rel="stylesheet"
     />
   </head>
-  <body class:list={["min-h-screen antialiased", showLiveBanner && "pt-10"]}>
-    {
-      showLiveBanner && (
-        <a
-          href="/en-vivo"
-          class="fixed top-0 left-0 right-0 z-[60] bg-sky-400 text-sky-950 text-center text-sm font-bold py-2.5 px-4 font-barlow tracking-wide hover:bg-sky-300 transition-colors shadow-lg"
-        >
-          ⚽ Uruguay est&aacute; jugando &mdash; Mir&aacute; el partido en vivo
-          &rarr;
-        </a>
-      )
-    }
+  <body class="min-h-screen antialiased">
     <slot />
     <Toaster client:load />
+    {
+      !!uruguayMatch && !ignoreLiveBox ? (
+        <LiveBox
+          client:load
+          isUruguayPlaying={true}
+          isAntelISP={isAntelISP}
+          homeTeam={uruguayMatch.homeTeam?.name}
+          awayTeam={uruguayMatch.awayTeam?.name}
+        />
+      ) : null
+    }
   </body>
 </html>
 
