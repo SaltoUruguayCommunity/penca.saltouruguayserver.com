@@ -41,6 +41,8 @@ const uruguayMatch = !liveResult.error
       (m) => m.homeTeam?.name === "Uruguay" || m.awayTeam?.name === "Uruguay",
     )
   : null;
+
+const isSignedIn = !!Astro.locals.user
 ---
 
 <!doctype html>
@@ -136,3 +138,26 @@ const uruguayMatch = !liveResult.error
     }
   });
 </script>
+
+{!isSignedIn && (
+ <script
+  is:inline
+  src="https://saltouruguayserver.com/sdk/onetap.js"
+  data-custom-auth="true"
+  data-callback="onSaltoAuth">
+</script>
+<script>
+import { handleSignIn } from "../lib/auth-client";
+
+  async function onSaltoAuth() {
+    handleSignIn();
+  }
+
+  declare global {
+    interface Window {
+      onSaltoAuth: () => void;
+    }
+  }
+  window.onSaltoAuth = onSaltoAuth;
+</script>
+)}
