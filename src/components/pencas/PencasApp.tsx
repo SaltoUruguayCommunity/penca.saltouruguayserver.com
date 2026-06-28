@@ -50,9 +50,21 @@ function getDefaultTab(groups: Group[]): Tab {
   return hasUnfinished ? "groups" : "knockout";
 }
 
+type Match = {
+  id: number;
+  matchDate: string;
+  stage: string;
+  status: string;
+  homeScore: number | null;
+  awayScore: number | null;
+  homeTeam: { id: number; name: string; flag: string | null };
+  awayTeam: { id: number; name: string; flag: string | null };
+};
+
 export default function PencasApp({ user }: Props) {
   const [tab, setTab] = useState<Tab>("groups");
   const [groups, setGroups] = useState<Group[]>([]);
+  const [knockoutMatches, setKnockoutMatches] = useState<Match[]>([]);
   const [predictions, setPredictions] = useState<PredictionMap>({});
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
   const [submitting, setSubmitting] = useState(false);
@@ -62,10 +74,16 @@ export default function PencasApp({ user }: Props) {
     Promise.all([
       actions.pencas.getGroups(),
       actions.pencas.getLeaderboard(),
-    ]).then(([groupsRes, lbRes]) => {
+      actions.pencas.getMatches({}),
+    ]).then(([groupsRes, lbRes, matchesRes]) => {
       const g = (groupsRes.data ?? []) as Group[];
       setGroups(g);
       if (lbRes.data) setLeaderboard(lbRes.data as LeaderboardEntry[]);
+
+      // Extract knockout matches (groupId is null)
+      const allMatches = (matchesRes.data ?? []) as Match[];
+      setKnockoutMatches(allMatches.filter((m) => !groups.some((g) => g.matches.some((gm) => gm.id === m.id))));
+
       setTab(getDefaultTab(g));
       setLoading(false);
     });
@@ -145,12 +163,13 @@ export default function PencasApp({ user }: Props) {
         </div>
       </div>
 
-      <TodayMatches groups={groups} />
+      <TodayMatches groups={groups} knockoutMatches={knockoutMatches} />
       <RecentMatches />
 
       <QuickPredict
         user={user}
         groups={groups}
+        knockoutMatches={knockoutMatches}
         predictions={predictions}
         onSubmit={async (matchId, home, away) => {
           await handleSubmit(matchId, home, away);

@@ -18,12 +18,23 @@ type Group = {
 
 type Props = {
   groups: Group[];
+  knockoutMatches: Match[];
 };
 
 function formatTime(dateStr: string) {
   const d = new Date(dateStr);
   return d.toLocaleTimeString("es-UY", { hour: "2-digit", minute: "2-digit" });
 }
+
+const STAGE_LABELS: Record<string, string> = {
+  group: "Grupo",
+  last_32: "32avos",
+  round_of_16: "16avos",
+  quarter_final: "Cuartos",
+  semi_final: "Semifinal",
+  third_place: "3er Puesto",
+  final: "Final",
+};
 
 function MatchRow(props: { m: Match & { groupName: string } }) {
   const m = props.m;
@@ -32,6 +43,10 @@ function MatchRow(props: { m: Match & { groupName: string } }) {
   const homeFlag = m.homeTeam.flag || "";
   const awayFlag = m.awayTeam.flag || "";
 
+  const stageLabel = m.groupName
+    ? `Grupo ${m.groupName}`
+    : STAGE_LABELS[m.stage] ?? m.stage;
+
   return (
     <a href={url} class={rowClass}>
       <div class="w-24 shrink-0">
@@ -39,7 +54,7 @@ function MatchRow(props: { m: Match & { groupName: string } }) {
           {formatTime(m.matchDate)}
         </p>
         <p class="text-xs text-muted uppercase">
-          Grupo {m.groupName}
+          {stageLabel}
         </p>
       </div>
       <div class="flex items-center gap-2 flex-1 min-w-0 justify-end">
@@ -70,17 +85,21 @@ function MatchRow(props: { m: Match & { groupName: string } }) {
   );
 }
 
-export default function TodayMatches(props: { groups: Group[] }) {
+export default function TodayMatches(props: { groups: Group[]; knockoutMatches: Match[] }) {
   const groups = props.groups;
   const now = new Date();
   const todayStr = now.toDateString();
 
-  const todayMatches = groups
+  const groupMatches = groups
     .flatMap(function(g) {
       return g.matches.map(function(m) {
         return Object.assign({}, m, { groupName: g.name });
       });
-    })
+    });
+  const knockoutToday = props.knockoutMatches.map(function(m) {
+    return Object.assign({}, m, { groupName: "" });
+  });
+  const todayMatches = [...groupMatches, ...knockoutToday]
     .filter(function(m) {
       const matchDate = new Date(m.matchDate);
       return matchDate.toDateString() === todayStr

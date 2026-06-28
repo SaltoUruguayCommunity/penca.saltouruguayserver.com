@@ -20,6 +20,7 @@ type Props = {
   groups: Array<{
     matches: Match[];
   }>;
+  knockoutMatches: Match[];
   predictions: PredictionMap;
   onSubmit: (matchId: number, homeScore: number, awayScore: number) => Promise<void>;
 };
@@ -44,15 +45,18 @@ const STAGE_LABELS: Record<string, string> = {
   final: "Final",
 };
 
-export default function QuickPredict({ user, groups, predictions, onSubmit }: Props) {
+export default function QuickPredict({ user, groups, knockoutMatches, predictions, onSubmit }: Props) {
   const [open, setOpen] = useState(false);
   const [localPreds, setLocalPreds] = useState<Record<number, { home: string; away: string }>>({});
   const [saving, setSaving] = useState<number | null>(null);
   const inputRefs = useRef<Record<string, HTMLInputElement | null>>({});
 
-  // All future unfinished matches without prediction
-  const pending = groups
-    .flatMap((g) => g.matches)
+  // All future unfinished matches without prediction (groups + knockout)
+  const allMatches = [
+    ...groups.flatMap((g) => g.matches),
+    ...knockoutMatches,
+  ];
+  const pending = allMatches
     .filter((m) => {
       const isFinished = m.status === "finished";
       const isLive = !isFinished && new Date(m.matchDate) <= new Date();
