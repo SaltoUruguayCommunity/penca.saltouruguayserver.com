@@ -3,6 +3,7 @@ import { toast } from "../../lib/toast";
 import type { Session } from "@auth/core/types";
 import { actions } from "astro:actions";
 import GroupsView from "./GroupsView";
+import KnockoutView from "./KnockoutView";
 import Leaderboard from "./Leaderboard";
 import LoginButton from "./LoginButton";
 import RecentMatches from "./RecentMatches";
@@ -40,8 +41,17 @@ type Props = {
   user: Session['user'] | null;
 };
 
+type Tab = "groups" | "knockout" | "leaderboard";
+
+function getDefaultTab(groups: Group[]): Tab {
+  const allGroupMatches = groups.flatMap((g) => g.matches);
+  if (allGroupMatches.length === 0) return "groups";
+  const hasUnfinished = allGroupMatches.some((m) => m.status !== "finished");
+  return hasUnfinished ? "groups" : "knockout";
+}
+
 export default function PencasApp({ user }: Props) {
-  const [tab, setTab] = useState<"groups" | "leaderboard">("groups");
+  const [tab, setTab] = useState<Tab>("groups");
   const [groups, setGroups] = useState<Group[]>([]);
   const [predictions, setPredictions] = useState<PredictionMap>({});
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
@@ -53,8 +63,10 @@ export default function PencasApp({ user }: Props) {
       actions.pencas.getGroups(),
       actions.pencas.getLeaderboard(),
     ]).then(([groupsRes, lbRes]) => {
-      if (groupsRes.data) setGroups(groupsRes.data as Group[]);
+      const g = (groupsRes.data ?? []) as Group[];
+      setGroups(g);
       if (lbRes.data) setLeaderboard(lbRes.data as LeaderboardEntry[]);
+      setTab(getDefaultTab(g));
       setLoading(false);
     });
   }, []);
@@ -158,6 +170,16 @@ export default function PencasApp({ user }: Props) {
           <span class={`absolute bottom-0 left-0 h-0.5 bg-accent transition-all duration-300 ${tab === "groups" ? "w-full" : "w-0"}`}></span>
         </button>
         <button
+          onClick={() => setTab("knockout")}
+          class={`relative px-5 py-3 text-lg font-barlow font-bold uppercase tracking-wider transition -mb-[1px] ${tab === "knockout"
+            ? "text-accent"
+            : "text-muted hover:text-white"
+            }`}
+        >
+          Eliminatorias
+          <span class={`absolute bottom-0 left-0 h-0.5 bg-accent transition-all duration-300 ${tab === "knockout" ? "w-full" : "w-0"}`}></span>
+        </button>
+        <button
           onClick={() => setTab("leaderboard")}
           class={`relative px-5 py-3 text-lg font-barlow font-bold uppercase tracking-wider transition -mb-[1px] ${tab === "leaderboard"
             ? "text-accent"
@@ -178,6 +200,13 @@ export default function PencasApp({ user }: Props) {
       ) : tab === "groups" ? (
         <GroupsView
           groups={groups}
+          predictions={predictions}
+          user={user}
+          onSubmit={handleSubmit}
+          submitting={submitting}
+        />
+      ) : tab === "knockout" ? (
+        <KnockoutView
           predictions={predictions}
           user={user}
           onSubmit={handleSubmit}

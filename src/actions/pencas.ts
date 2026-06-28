@@ -12,7 +12,7 @@ import {
 } from "../db/schema";
 import { calcPoints } from "../utils/pencas/scoring";
 import { rewardPrediction, rewardExactScore, getStreakMilestoneBonus } from "../utils/pencas/rewards";
-import { syncScoresFromApi } from "../utils/pencas/sync";
+import { syncScoresFromApi, autoImportNextStage } from "../utils/pencas/sync";
 import {
   fetchCompetitionStandings,
   fetchCompetitionMatches,
@@ -22,6 +22,7 @@ import {
 
 const STAGES = [
   "group",
+  "last_32",
   "round_of_16",
   "quarter_final",
   "semi_final",
@@ -370,7 +371,7 @@ export const pencas = {
               homeTeamId,
               awayTeamId,
               matchDate: match.utcDate,
-              stage: mapStage(match.stage || match.group ? "GROUP_STAGE" : ""),
+              stage: mapStage(match.stage || (match.group ? "GROUP_STAGE" : "")),
               status: mapStatus(match.status),
               homeScore: match.score.fullTime.home,
               awayScore: match.score.fullTime.away,
@@ -466,7 +467,9 @@ export const pencas = {
     syncScores: defineAction({
       handler: async (_, { request, locals }) => {
         await requireAdmin(locals);
-        return await syncScoresFromApi();
+        const scores = await syncScoresFromApi();
+        const autoImport = await autoImportNextStage();
+        return { ...scores, ...autoImport };
       },
     }),
 
@@ -494,6 +497,86 @@ export const pencas = {
         const orphaned = matches.filter((m) => !m.groupId).length;
 
         return { groups: byGroup, totalMatches, orphaned };
+      },
+    }),
+
+    reimportKnockout: defineAction({
+      handler: async (_, { request, locals }) => {
+        await requireAdmin(locals);
+
+        // 1. Get existing teams map
+        const allTeams = await client.select().from(WcTeamsTable).all();
+        const teamMap = new Map(allTeams.map((t) => [t.fifaCode, t.id]));
+
+        // 2. Count and delete all matches with groupId IS NULL (knockout matches)
+        const orphaned = await client
+          .select({ count: sql<number>`COUNT(*)` })
+          .from(WcMatchesTable)
+          .where(sql`${WcMatchesTable.groupId} IS NULL`)
+          .get();
+        const deletedCount = orphaned?.count ?? 0;
+
+        await client
+          .delete(WcMatchesTable)
+          .where(sql`${WcMatchesTable.groupId} IS NULL`)
+          .run();
+
+        // 3. Fetch ALL matches from API (no stage filter — API filter is unreliable)
+        const allMatches = await fetchCompetitionMatches("WC");
+
+        const KNOCKOUT_STAGES = new Set([
+          "last_32",
+          "round_of_16",
+          "quarter_final",
+          "semi_final",
+          "third_place",
+          "final",
+        ]);
+
+        const knockoutMatches = allMatches.matches.filter((m) =>
+          KNOCKOUT_STAGES.has(mapStage(m.stage))
+        );
+
+        let imported = 0;
+        const importedStages = new Set<string>();
+
+        for (const match of knockoutMatches) {
+          const homeTeamId = teamMap.get(match.homeTeam.tla);
+          const awayTeamId = teamMap.get(match.awayTeam.tla);
+          if (!homeTeamId || !awayTeamId) continue;
+
+          const existing = await client
+            .select()
+            .from(WcMatchesTable)
+            .where(
+              and(
+                eq(WcMatchesTable.homeTeamId, homeTeamId),
+                eq(WcMatchesTable.awayTeamId, awayTeamId),
+                eq(WcMatchesTable.stage, mapStage(match.stage)),
+              ),
+            )
+            .get();
+
+          if (!existing) {
+            await client
+              .insert(WcMatchesTable)
+              .values({
+                groupId: null,
+                homeTeamId,
+                awayTeamId,
+                matchDate: match.utcDate,
+                stage: mapStage(match.stage),
+                status: mapStatus(match.status),
+                homeScore: match.score.fullTime.home,
+                awayScore: match.score.fullTime.away,
+              })
+              .run();
+            imported++;
+            importedStages.add(mapStage(match.stage));
+          }
+        }
+
+        return { deleted: deletedCount, imported, stages: [...importedStages] };
       },
     }),
 

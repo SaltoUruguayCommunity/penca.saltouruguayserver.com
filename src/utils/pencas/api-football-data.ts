@@ -117,6 +117,7 @@ export async function fetchCompetitionMatches(
 
 const STAGE_MAP: Record<string, string> = {
   GROUP_STAGE: "group",
+  LAST_32: "last_32",
   ROUND_OF_16: "round_of_16",
   QUARTER_FINALS: "quarter_final",
   SEMI_FINALS: "semi_final",

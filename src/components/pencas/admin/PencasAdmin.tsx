@@ -31,6 +31,7 @@ export default function PencasAdmin({ user }: Props) {
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
   const [diagnosis, setDiagnosis] = useState<{ groups: Record<string, { total: number; withGroupId: number }>; totalMatches: number; orphaned: number } | null>(null);
   const [lastSyncedAt, setLastSyncedAt] = useState<string | null>(null);
+  const [reimporting, setReimporting] = useState(false);
 
   async function loadMatches() {
     setLoadingMatches(true);
@@ -72,10 +73,42 @@ export default function PencasAdmin({ user }: Props) {
     if (res.error) {
       setMessage({ type: "error", text: res.error.message });
     } else {
-      const count = (res.data as { updated: number })?.updated ?? 0;
-      setMessage({ type: "success", text: `Sincronización completa — ${count} partido${count !== 1 ? "s" : ""} actualizado${count !== 1 ? "s" : ""}` });
+      const data = res.data as { updated: number; imported: number; stage: string | null };
+      let text = `Sincronización completa — ${data.updated} partido${data.updated !== 1 ? "s" : ""} actualizado${data.updated !== 1 ? "s" : ""}`;
+      if (data.imported > 0) {
+        text += ` — ${data.imported} partido${data.imported !== 1 ? "s" : ""} de ${data.stage ?? "siguiente fase"} importado${data.imported !== 1 ? "s" : ""}`;
+      }
+      setMessage({ type: "success", text });
       await loadMatches();
       await loadSyncMetadata();
+    }
+  }
+
+  async function handleReimportKnockout() {
+    if (!window.confirm("¿Re-importar partidos de eliminatorias?\n\nSe eliminarán todos los partidos sin grupo y se volverán a crear desde la API.")) return;
+
+    setReimporting(true);
+    setMessage(null);
+    const res = await actions.pencas.admin.reimportKnockout();
+    setReimporting(false);
+    if (res.error) {
+      setMessage({ type: "error", text: res.error.message });
+    } else {
+      const data = res.data as { deleted: number; imported: number; stages: string[] };
+      const stageLabels: Record<string, string> = {
+        last_32: "Treintaydosavos",
+        round_of_16: "Dieciseisavos",
+        quarter_final: "Cuartos",
+        semi_final: "Semifinal",
+        third_place: "Tercer Puesto",
+        final: "Final",
+      };
+      const stageNames = data.stages.map((s) => stageLabels[s] ?? s).join(", ");
+      setMessage({
+        type: "success",
+        text: `Eliminados ${data.deleted}, importados ${data.imported} partidos${stageNames ? ` (${stageNames})` : ""}`,
+      });
+      await loadMatches();
     }
   }
 
@@ -173,6 +206,14 @@ export default function PencasAdmin({ user }: Props) {
               title="Diagnóstico"
             >
               <Bug class="h-4 w-4" />
+            </button>
+            <button
+              onClick={handleReimportKnockout}
+              disabled={reimporting}
+              class="btn-secondary !py-2.5 !px-4 !text-xs"
+            >
+              <RotateCcw class={`h-4 w-4 ${reimporting ? "animate-spin" : ""}`} />
+              {reimporting ? "Re-importando..." : "Re-importar eliminatorias"}
             </button>
             <button
               onClick={handleSyncScores}

@@ -28,7 +28,8 @@ type Props = {
 
 const STAGE_LABELS: Record<string, string> = {
   group: "Fase de Grupos",
-  round_of_16: "Octavos",
+  last_32: "Treintaydosavos",
+  round_of_16: "Dieciseisavos",
   quarter_final: "Cuartos",
   semi_final: "Semifinal",
   third_place: "Tercer Puesto",

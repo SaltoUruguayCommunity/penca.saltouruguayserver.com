@@ -16,6 +16,7 @@ import { rewardExactScore } from "./rewards";
 
 const STAGES = [
   "group",
+  "last_32",
   "round_of_16",
   "quarter_final",
   "semi_final",
@@ -148,6 +149,7 @@ export async function autoImportNextStage(): Promise<{
     .all();
 
   const presentStages = new Set(stages.map((s) => s.stage));
+  console.log("[sync] autoImportNextStage: present stages in DB:", [...presentStages]);
 
   for (let i = 0; i < STAGES.length - 1; i++) {
     const current = STAGES[i];
@@ -173,35 +175,43 @@ export async function autoImportNextStage(): Promise<{
       )
       .get();
 
+    console.log(`[sync] autoImportNextStage: ${current} → total: ${total?.count}, finished: ${finished?.count}`);
+
     if (total && finished && total.count === finished.count) {
+      console.log(`[sync] autoImportNextStage: ${current} stage complete, importing ${next}...`);
+
       const apiStage = STAGE_TO_API[next];
       if (!apiStage) continue;
 
-      const res = await fetchCompetitionMatches("WC", { stage: apiStage });
+      // Fetch ALL matches from API (no stage filter — API filter is unreliable)
+      const allMatches = await fetchCompetitionMatches("WC");
+      const nextStageMatches = allMatches.matches.filter(
+        (m) => mapStage(m.stage) === next
+      );
+
+      console.log(`[sync] autoImportNextStage: API returned ${allMatches.matches.length} total, ${nextStageMatches.length} for ${next}`);
+
+      const allTeams = await client.select().from(WcTeamsTable).all();
+      const teamMap = new Map(allTeams.map((t) => [t.fifaCode, t.id]));
+
       let imported = 0;
 
-      for (const match of res.matches) {
-        const homeTeamId = await client
-          .select({ id: WcTeamsTable.id })
-          .from(WcTeamsTable)
-          .where(eq(WcTeamsTable.fifaCode, match.homeTeam.tla))
-          .get();
+      for (const match of nextStageMatches) {
+        const homeTeamId = teamMap.get(match.homeTeam.tla);
+        const awayTeamId = teamMap.get(match.awayTeam.tla);
 
-        const awayTeamId = await client
-          .select({ id: WcTeamsTable.id })
-          .from(WcTeamsTable)
-          .where(eq(WcTeamsTable.fifaCode, match.awayTeam.tla))
-          .get();
-
-        if (!homeTeamId || !awayTeamId) continue;
+        if (!homeTeamId || !awayTeamId) {
+          console.log(`[sync] autoImportNextStage: SKIP team not found: ${match.homeTeam.tla} vs ${match.awayTeam.tla}`);
+          continue;
+        }
 
         const existing = await client
           .select()
           .from(WcMatchesTable)
           .where(
             and(
-              eq(WcMatchesTable.homeTeamId, homeTeamId.id),
-              eq(WcMatchesTable.awayTeamId, awayTeamId.id),
+              eq(WcMatchesTable.homeTeamId, homeTeamId),
+              eq(WcMatchesTable.awayTeamId, awayTeamId),
               eq(WcMatchesTable.stage, mapStage(match.stage)),
             ),
           )
@@ -212,8 +222,8 @@ export async function autoImportNextStage(): Promise<{
             .insert(WcMatchesTable)
             .values({
               groupId: null,
-              homeTeamId: homeTeamId.id,
-              awayTeamId: awayTeamId.id,
+              homeTeamId,
+              awayTeamId,
               matchDate: match.utcDate,
               stage: mapStage(match.stage),
               status: mapStatus(match.status),
@@ -222,9 +232,11 @@ export async function autoImportNextStage(): Promise<{
             })
             .run();
           imported++;
+          console.log(`[sync] autoImportNextStage: INSERTED ${match.homeTeam.tla} vs ${match.awayTeam.tla} (${mapStage(match.stage)})`);
         }
       }
 
+      console.log(`[sync] autoImportNextStage: done — imported ${imported} ${next} matches`);
       return { imported, stage: next };
     }
   }
@@ -234,6 +246,7 @@ export async function autoImportNextStage(): Promise<{
 
 const STAGE_TO_API: Record<string, string> = {
   group: "GROUP_STAGE",
+  last_32: "LAST_32",
   round_of_16: "ROUND_OF_16",
   quarter_final: "QUARTER_FINALS",
   semi_final: "SEMI_FINALS",
