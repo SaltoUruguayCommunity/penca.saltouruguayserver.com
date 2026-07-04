@@ -23,6 +23,7 @@ import {
 const STAGES = [
   "group",
   "last_32",
+  "last_16",
   "round_of_16",
   "quarter_final",
   "semi_final",
@@ -526,6 +527,7 @@ export const pencas = {
 
         const KNOCKOUT_STAGES = new Set([
           "last_32",
+          "last_16",
           "round_of_16",
           "quarter_final",
           "semi_final",
