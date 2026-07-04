@@ -29,6 +29,7 @@ function formatTime(dateStr: string) {
 const STAGE_LABELS: Record<string, string> = {
   group: "Grupo",
   last_32: "32avos",
+  last_16: "16avos",
   round_of_16: "16avos",
   quarter_final: "Cuartos",
   semi_final: "Semifinal",

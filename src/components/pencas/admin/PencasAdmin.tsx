@@ -97,6 +97,7 @@ export default function PencasAdmin({ user }: Props) {
       const data = res.data as { deleted: number; imported: number; stages: string[] };
       const stageLabels: Record<string, string> = {
         last_32: "Treintaydosavos",
+        last_16: "Dieciseisavos",
         round_of_16: "Dieciseisavos",
         quarter_final: "Cuartos",
         semi_final: "Semifinal",

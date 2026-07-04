@@ -17,6 +17,7 @@ import { rewardExactScore } from "./rewards";
 const STAGES = [
   "group",
   "last_32",
+  "last_16",
   "round_of_16",
   "quarter_final",
   "semi_final",
@@ -247,6 +248,7 @@ export async function autoImportNextStage(): Promise<{
 const STAGE_TO_API: Record<string, string> = {
   group: "GROUP_STAGE",
   last_32: "LAST_32",
+  last_16: "LAST_16",
   round_of_16: "ROUND_OF_16",
   quarter_final: "QUARTER_FINALS",
   semi_final: "SEMI_FINALS",
