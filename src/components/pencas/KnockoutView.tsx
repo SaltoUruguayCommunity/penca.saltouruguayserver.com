@@ -26,6 +26,7 @@ type Props = {
 
 const KNOCKOUT_STAGES = [
   { key: "last_32", label: "Treintaydosavos de Final", abbr: "32AVOS" },
+  { key: "last_16", label: "Dieciseisavos de Final", abbr: "16AVOS" },
   { key: "round_of_16", label: "Dieciseisavos de Final", abbr: "16AVOS" },
   { key: "quarter_final", label: "Cuartos de Final", abbr: "CUARTOS" },
   { key: "semi_final", label: "Semifinal", abbr: "SEMIFINAL" },
