@@ -37,7 +37,7 @@ const KNOCKOUT_STAGES = [
 export default function KnockoutView({ predictions, user, onSubmit, submitting }: Props) {
   const [matchesByStage, setMatchesByStage] = useState<Record<string, Match[]>>({});
   const [loading, setLoading] = useState(true);
-  const [activeStage, setActiveStage] = useState<string>("last_32");
+  const [activeStage, setActiveStage] = useState<string>("");
 
   useEffect(() => {
     const stages = KNOCKOUT_STAGES.map((s) => s.key);
@@ -54,6 +54,20 @@ export default function KnockoutView({ predictions, user, onSubmit, submitting }
         byStage[r.stage] = r.matches;
       }
       setMatchesByStage(byStage);
+
+      const withMatches = results.filter((r) => r.matches.length > 0);
+      if (withMatches.length > 0) {
+        const lastWithMatches = withMatches[withMatches.length - 1];
+        const hasUnfinished = withMatches.some((r) =>
+          r.matches.some((m) => m.status !== "finished")
+        );
+        setActiveStage(
+          hasUnfinished
+            ? withMatches.find((r) => r.matches.some((m) => m.status !== "finished"))!.stage
+            : lastWithMatches.stage
+        );
+      }
+
       setLoading(false);
     });
   }, []);
