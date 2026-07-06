@@ -141,7 +141,7 @@ export default function KnockoutView({ predictions, user, onSubmit, submitting }
                 awayScore: existing.awayScore,
                 points: existing.points ?? null,
               }
-            : { matchId: match.id, homeScore: match.homeScore ?? 0, awayScore: match.awayScore ?? 0, points: null };
+            : null;
 
           return (
             <MatchCard

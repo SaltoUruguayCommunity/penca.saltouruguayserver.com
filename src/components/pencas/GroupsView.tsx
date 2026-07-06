@@ -105,14 +105,14 @@ export default function GroupsView({ groups, predictions, user, onSubmit, submit
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
                   {matches.map((match) => {
                     const existing = predictions[match.id];
-                    const prediction: { matchId: number; homeScore: number; awayScore: number; points: number | null } = existing
+                    const prediction: { matchId: number; homeScore: number; awayScore: number; points: number | null } | null = existing
                       ? {
                         matchId: existing.matchId,
                         homeScore: existing.homeScore,
                         awayScore: existing.awayScore,
                         points: existing.points ?? null,
                       }
-                      : { matchId: match.id, homeScore: match.homeScore ?? 0, awayScore: match.awayScore ?? 0, points: null };
+                      : null;
 
                     return (
                       <MatchCard
