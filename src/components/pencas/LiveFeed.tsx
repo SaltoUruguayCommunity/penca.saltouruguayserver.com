@@ -30,6 +30,7 @@ type LiveFeedData = {
 
 type Props = {
   matchId: number;
+  finished?: boolean;
 };
 
 function getEventIcon(type: number): string {
@@ -103,7 +104,7 @@ function parseMatchTime(matchTime: string): { base: string; added: string | null
   return { base: matchTime, added: null };
 }
 
-export default function LiveFeed({ matchId }: Props) {
+export default function LiveFeed({ matchId, finished }: Props) {
   const [feed, setFeed] = useState<LiveFeedData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -129,13 +130,14 @@ export default function LiveFeed({ matchId }: Props) {
     }
 
     fetchFeed();
+    if (finished) return () => { cancelled = true; };
     const id = setInterval(fetchFeed, 12000);
     return () => { cancelled = true; clearInterval(id); };
   }, [matchId]);
 
   useEffect(() => {
     if (timelineRef.current) {
-      timelineRef.current.scrollTop = timelineRef.current.scrollHeight;
+      timelineRef.current.scrollTop = 0;
     }
   }, [feed?.events.length]);
 
@@ -144,10 +146,10 @@ export default function LiveFeed({ matchId }: Props) {
       <div class="glass-card p-6">
         <div class="flex items-center gap-2 mb-4">
           <span class="w-2 h-2 rounded-full bg-green-accent animate-pulse" />
-          <h3 class="font-barlow font-bold uppercase text-sm text-white">Live Feed</h3>
-        </div>
-        <div class="space-y-3">
-          {[1, 2, 3].map((i) => (
+            <h3 class="font-barlow font-bold uppercase text-sm text-white">{finished ? "Historial del partido" : "Live Feed"}</h3>
+          </div>
+          <div class="space-y-3">
+            {[1, 2, 3].map((i) => (
             <div key={i} class="flex items-center gap-3 animate-pulse">
               <div class="w-8 h-8 rounded-full bg-accent-subtle" />
               <div class="flex-1 space-y-2">
@@ -166,7 +168,7 @@ export default function LiveFeed({ matchId }: Props) {
       <div class="glass-card p-6">
         <div class="flex items-center gap-2 mb-3">
           <span class="w-2 h-2 rounded-full bg-green-accent animate-pulse" />
-          <h3 class="font-barlow font-bold uppercase text-sm text-white">Live Feed</h3>
+          <h3 class="font-barlow font-bold uppercase text-sm text-white">{finished ? "Historial del partido" : "Live Feed"}</h3>
         </div>
         <div class="text-center py-4">
           <p class="text-muted text-sm">{error}</p>
@@ -193,7 +195,7 @@ export default function LiveFeed({ matchId }: Props) {
         <div class="flex items-center justify-between mb-4">
           <div class="flex items-center gap-2">
             <span class="w-2 h-2 rounded-full bg-green-accent animate-pulse" />
-            <h3 class="font-barlow font-bold uppercase text-sm text-white">Live Feed</h3>
+            <h3 class="font-barlow font-bold uppercase text-sm text-white">{finished ? "Historial del partido" : "Live Feed"}</h3>
           </div>
           <span class="text-[10px] text-muted/50 font-mono">
             {lastUpdate.toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit", second: "2-digit" })}
@@ -257,7 +259,7 @@ export default function LiveFeed({ matchId }: Props) {
         class="max-h-[400px] overflow-y-auto scrollbar-thin"
         style={{ scrollBehavior: "smooth" }}
       >
-        {feed.events.length === 0 ? (
+              {feed.events.length === 0 ? (
           <div class="p-8 text-center">
             <p class="text-muted text-sm">Esperando eventos del partido...</p>
           </div>
@@ -266,7 +268,7 @@ export default function LiveFeed({ matchId }: Props) {
             {/* Timeline line */}
             <div class="absolute left-[23px] top-0 bottom-0 w-px bg-accent-border/20" />
 
-            {feed.events.map((event) => (
+            {[...feed.events].reverse().map((event) => (
               <div
                 key={event.id}
                 class={`relative flex items-start gap-3 px-4 sm:px-5 py-2.5 transition-colors ${
@@ -323,7 +325,7 @@ export default function LiveFeed({ matchId }: Props) {
           <div class="flex items-center gap-1.5">
             <span class="w-1.5 h-1.5 rounded-full bg-green-accent animate-pulse" />
             <span class="text-[10px] text-muted/40 uppercase tracking-wider">
-              Actualizando cada 12s
+              {finished ? "Historial del partido" : "Actualizando cada 12s"}
             </span>
           </div>
         </div>

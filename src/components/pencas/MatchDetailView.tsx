@@ -189,8 +189,8 @@ export default function MatchDetailView({ match, predictions: initialPredictions
         </div>
       )}
 
-      {isLive && match.fifaMatchId && (
-        <LiveFeed matchId={match.id} />
+      {(isLive || isFinished) && match.fifaMatchId && (
+        <LiveFeed matchId={match.id} finished={isFinished} />
       )}
 
       {canPredict && (
