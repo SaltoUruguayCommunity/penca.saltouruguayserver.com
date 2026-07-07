@@ -2,6 +2,7 @@ import { ActionError, defineAction } from "astro:actions";
 import { z } from "astro:schema";
 import { and, desc, eq, inArray, lte, ne, sql } from "drizzle-orm";
 import { client, turso } from "../db";
+import { parseCsv } from "../utils/pencas/csv";
 import {
   WcGroupsTable,
   WcMatchesTable,
@@ -743,6 +744,169 @@ export const pencas = {
           totalChecked: matchesWithoutFifaId.length,
           matched,
           total: allTeams.length,
+        };
+      },
+    }),
+
+    importPredictionsCsv: defineAction({
+      input: z.object({
+        csv: z.string(),
+        dryRun: z.boolean().default(true),
+        overwrite: z.boolean().default(false),
+      }),
+      handler: async ({ csv, dryRun, overwrite }, { locals }) => {
+        await requireAdmin(locals);
+
+        const { headers: rawHeaders, rows } = parseCsv(csv);
+        // Normalize headers to camelCase for flexible matching
+        const headers = rawHeaders.map((h) => {
+          const lc = h.toLowerCase();
+          if (lc === "susid" || lc === "sus_id") return "susId";
+          if (lc === "homefifacode" || lc === "home_fifacode") return "homeFifaCode";
+          if (lc === "awayfifacode" || lc === "away_fifacode") return "awayFifaCode";
+          if (lc === "matchdate" || lc === "match_date") return "matchDate";
+          if (lc === "predhome" || lc === "pred_home" || lc === "homescore" || lc === "home_score") return "predHome";
+          if (lc === "predaway" || lc === "pred_away" || lc === "awayscore" || lc === "away_score") return "predAway";
+          return h;
+        });
+
+        const required = ["susId", "homeFifaCode", "awayFifaCode", "matchDate", "predHome", "predAway"];
+        const missingHeaders = required.filter((h) => !headers.includes(h));
+        if (missingHeaders.length > 0) {
+          throw new ActionError({
+            code: "BAD_REQUEST",
+            message: `Faltan columnas requeridas: ${missingHeaders.join(", ")}. Headers encontrados: ${rawHeaders.join(", ")}`,
+          });
+        }
+
+        const col = (name: string) => headers.indexOf(name);
+        const idxSus = col("susId");
+        const idxUsername = headers.includes("username") ? col("username") : -1;
+        const idxHome = col("homeFifaCode");
+        const idxAway = col("awayFifaCode");
+        const idxDate = col("matchDate");
+        const idxStage = headers.includes("stage") ? col("stage") : -1;
+        const idxPredHome = col("predHome");
+        const idxPredAway = col("predAway");
+
+        // Build lookup maps from this (target) database
+        const users = await client.select().from(UsersTable).all();
+        const usersBySus = new Map(users.map((u) => [String(u.susId), u]));
+        const usersByUsername = new Map(users.map((u) => [u.username, u]));
+
+        const teams = await client.select().from(WcTeamsTable).all();
+        const teamCode = new Map(teams.map((t) => [t.id, (t.fifaCode ?? "").toUpperCase()]));
+
+        const matches = await client.select().from(WcMatchesTable).all();
+        const matchMap = new Map<string, (typeof matches)[number]>();
+        for (const m of matches) {
+          const h = teamCode.get(m.homeTeamId) ?? "";
+          const a = teamCode.get(m.awayTeamId) ?? "";
+          matchMap.set(`${h}_${a}_${m.matchDate}`, m);
+          matchMap.set(`${a}_${h}_${m.matchDate}`, m); // reverse fallback
+        }
+
+        const existingPreds = await client.select().from(WcPredictionsTable).all();
+        const predMap = new Map(
+          existingPreds.map((p) => [`${p.userId}_${p.matchId}`, p]),
+        );
+
+        const toInsert: (typeof WcPredictionsTable.$inferInsert)[] = [];
+        const toUpdate: { id: number; homeScore: number; awayScore: number }[] = [];
+
+        let skipped = 0;
+        let omitted = 0;
+        const errors: { line: number; reason: string }[] = [];
+        const previewInsert: { username: string; home: string; away: string; predHome: number; predAway: number }[] = [];
+        const previewSkip: { username: string; home: string; away: string }[] = [];
+        const previewError: { line: number; reason: string }[] = [];
+
+        let line = 1;
+        for (const row of rows) {
+          line++;
+          const susRaw = (row[idxSus] ?? "").trim();
+          const usernameRaw = idxUsername >= 0 ? (row[idxUsername] ?? "").trim() : "";
+          const home = (row[idxHome] ?? "").trim().toUpperCase();
+          const away = (row[idxAway] ?? "").trim().toUpperCase();
+          const date = (row[idxDate] ?? "").trim();
+          const predHome = parseInt(row[idxPredHome] ?? "", 10);
+          const predAway = parseInt(row[idxPredAway] ?? "", 10);
+
+          if (!susRaw && !usernameRaw) {
+            errors.push({ line, reason: "Falta susId y username" });
+            continue;
+          }
+          if (!home || !away || !date) {
+            errors.push({ line, reason: "Falta homeFifaCode, awayFifaCode o matchDate" });
+            continue;
+          }
+          if (Number.isNaN(predHome) || Number.isNaN(predAway)) {
+            errors.push({ line, reason: `Marcador inválido: ${row[idxPredHome]} - ${row[idxPredAway]}` });
+            continue;
+          }
+
+          const user = usersBySus.get(susRaw) ?? (usernameRaw ? usersByUsername.get(usernameRaw) : undefined);
+          if (!user) {
+            errors.push({ line, reason: `Usuario no encontrado (susId=${susRaw || "-"}, user=${usernameRaw || "-"})` });
+            continue;
+          }
+
+          const match = matchMap.get(`${home}_${away}_${date}`);
+          if (!match) {
+            errors.push({ line, reason: `Partido no encontrado (${home} vs ${away} @ ${date})` });
+            continue;
+          }
+
+          const existing = predMap.get(`${user.id}_${match.id}`);
+          if (!existing) {
+            toInsert.push({ userId: user.id, matchId: match.id, homeScore: predHome, awayScore: predAway });
+            if (previewInsert.length < 200) {
+              previewInsert.push({ username: user.username, home, away, predHome, predAway });
+            }
+          } else if (existing.homeScore === predHome && existing.awayScore === predAway) {
+            skipped++;
+            if (previewSkip.length < 200) previewSkip.push({ username: user.username, home, away });
+          } else if (overwrite) {
+            toUpdate.push({ id: existing.id, homeScore: predHome, awayScore: predAway });
+            if (previewInsert.length < 200) {
+              previewInsert.push({ username: user.username, home, away, predHome, predAway });
+            }
+          } else {
+            omitted++;
+          }
+        }
+
+        if (!dryRun) {
+          if (toInsert.length > 0) {
+            await client
+              .insert(WcPredictionsTable)
+              .values(toInsert)
+              .onConflictDoUpdate({
+                target: [WcPredictionsTable.userId, WcPredictionsTable.matchId],
+                set: { homeScore: sql`excluded.home_score`, awayScore: sql`excluded.away_score`, updatedAt: sql`(current_timestamp)` },
+              })
+              .run();
+          }
+          for (const u of toUpdate) {
+            await client
+              .update(WcPredictionsTable)
+              .set({ homeScore: u.homeScore, awayScore: u.awayScore, updatedAt: sql`(current_timestamp)` })
+              .where(eq(WcPredictionsTable.id, u.id))
+              .run();
+          }
+        }
+
+        return {
+          parsed: rows.length,
+          toInsert: toInsert.length,
+          skipped,
+          omitted,
+          updated: toUpdate.length,
+          errors,
+          previewInsert,
+          previewSkip,
+          previewError: errors.slice(0, 100),
+          dryRun,
         };
       },
     }),

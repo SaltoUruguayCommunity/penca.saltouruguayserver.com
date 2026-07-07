@@ -1,6 +1,6 @@
 import { useEffect, useState } from "preact/hooks";
 import { actions } from "astro:actions";
-import { RefreshCw, Trophy, Save, Calculator, CloudDownload, RotateCcw, Bug, Link, Wand2 } from "lucide-preact";
+import { RefreshCw, Trophy, Save, Calculator, CloudDownload, RotateCcw, Bug, Link, Wand2, Upload } from "lucide-preact";
 import { format, parseISO } from "date-fns";
 import { es } from "date-fns/locale";
 import type { Session } from "@auth/core/types";
@@ -19,6 +19,19 @@ type Match = {
 
 type Props = {
   user: Session['user'] | null;
+};
+
+type CsvPreview = {
+  parsed: number;
+  toInsert: number;
+  skipped: number;
+  omitted: number;
+  updated: number;
+  errors: { line: number; reason: string }[];
+  previewInsert: { username: string; home: string; away: string; predHome: number; predAway: number }[];
+  previewSkip: { username: string; home: string; away: string }[];
+  previewError: { line: number; reason: string }[];
+  dryRun: boolean;
 };
 
 export default function PencasAdmin({ user }: Props) {
@@ -46,6 +59,11 @@ export default function PencasAdmin({ user }: Props) {
     awayName: string;
     stage: string;
   }> | null>(null);
+  const [csvText, setCsvText] = useState("");
+  const [csvFileName, setCsvFileName] = useState("");
+  const [csvOverwrite, setCsvOverwrite] = useState(false);
+  const [csvPreview, setCsvPreview] = useState<CsvPreview | null>(null);
+  const [csvImporting, setCsvImporting] = useState(false);
 
   async function loadMatches() {
     setLoadingMatches(true);
@@ -251,6 +269,48 @@ export default function PencasAdmin({ user }: Props) {
     );
   }
 
+  function handleCsvFile(e: Event) {
+    const file = (e.target as HTMLInputElement).files?.[0];
+    if (!file) return;
+    setCsvFileName(file.name);
+    setCsvPreview(null);
+    const reader = new FileReader();
+    reader.onload = () => setCsvText(String(reader.result ?? ""));
+    reader.readAsText(file);
+  }
+
+  async function handlePreviewCsv() {
+    if (!csvText) return;
+    setMessage(null);
+    setCsvImporting(true);
+    const res = await actions.pencas.admin.importPredictionsCsv({ csv: csvText, dryRun: true, overwrite: csvOverwrite });
+    setCsvImporting(false);
+    if (res.error) {
+      setMessage({ type: "error", text: res.error.message });
+    } else {
+      setCsvPreview(res.data as CsvPreview);
+    }
+  }
+
+  async function handleImportCsv() {
+    if (!csvText) return;
+    if (!window.confirm("¿Importar las predicciones faltantes? Esta acción no se puede deshacer.")) return;
+    setMessage(null);
+    setCsvImporting(true);
+    const res = await actions.pencas.admin.importPredictionsCsv({ csv: csvText, dryRun: false, overwrite: csvOverwrite });
+    setCsvImporting(false);
+    if (res.error) {
+      setMessage({ type: "error", text: res.error.message });
+    } else {
+      const d = res.data as CsvPreview;
+      setCsvPreview(d);
+      setMessage({
+        type: "success",
+        text: `Importadas ${d.toInsert} predicciones, ${d.omitted} omitidas, ${d.errors.length} errores`,
+      });
+    }
+  }
+
   return (
     <div class="max-w-6xl mx-auto px-4 sm:px-6 py-8">
       {/* Header */}
@@ -357,6 +417,110 @@ export default function PencasAdmin({ user }: Props) {
           )}
         </div>
       )}
+
+      {/* Recuperar predicciones CSV */}
+      <div class="glass-card p-4 sm:p-6 mb-6">
+        <div class="flex items-center gap-3 mb-3">
+          <Upload class="h-5 w-5 text-accent" />
+          <span class="font-barlow font-bold uppercase text-sm text-white">Importar predicciones CSV</span>
+        </div>
+        <p class="text-xs text-muted mb-3">
+          Importá predicciones desde tu copia local Turso. Se emparejan por
+          equipo (<code class="text-accent-light">fifaCode</code>) y fecha, no por <code class="text-accent-light">matchId</code>,
+          así que funciona aunque los IDs de ambas bases difieran.
+        </p>
+        <p class="text-[11px] text-muted bg-black/20 rounded p-2 font-mono mb-4">
+          turso db shell tu-db-name &lt; query.sql<br />
+          turso db shell tu-db-name ".mode csv" ".headers on" "SELECT ..." &gt; predicciones.csv
+        </p>
+        <div class="flex flex-wrap items-center gap-3 mb-2">
+          <label class="btn-secondary !py-2.5 !px-4 !text-xs cursor-pointer inline-flex items-center gap-2">
+            <Upload class="h-4 w-4" />
+            {csvFileName || "Seleccionar CSV"}
+            <input type="file" accept=".csv,text/csv" onInput={handleCsvFile} class="hidden" />
+          </label>
+          <label class="flex items-center gap-2 text-xs text-muted cursor-pointer select-none">
+            <input
+              type="checkbox"
+              checked={csvOverwrite}
+              onInput={(e) => setCsvOverwrite((e.target as HTMLInputElement).checked)}
+            />
+            Sobrescribir existentes
+          </label>
+          <button
+            onClick={handlePreviewCsv}
+            disabled={!csvText || csvImporting}
+            class="btn-secondary !py-2.5 !px-4 !text-xs"
+          >
+            {csvImporting ? "Analizando..." : "Vista previa"}
+          </button>
+          <button
+            onClick={handleImportCsv}
+            disabled={!csvText || csvImporting}
+            class="btn-primary !py-2.5 !px-4 !text-xs"
+          >
+            Importar
+          </button>
+        </div>
+
+        {csvPreview && (
+          <div class="text-xs space-y-4 mt-4 pt-4 border-t border-accent-border/10">
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              <div class="bg-green-accent/10 rounded-lg p-3 text-center">
+                <div class="font-barlow font-black text-lg text-green-accent">{csvPreview.toInsert}</div>
+                <div class="text-muted uppercase tracking-wider text-[10px]">Se importarán</div>
+              </div>
+              <div class="bg-accent-subtle/30 rounded-lg p-3 text-center">
+                <div class="font-barlow font-black text-lg text-white">{csvPreview.skipped}</div>
+                <div class="text-muted uppercase tracking-wider text-[10px]">Ya existen (igual)</div>
+              </div>
+              <div class="bg-gold/10 rounded-lg p-3 text-center">
+                <div class="font-barlow font-black text-lg text-gold">{csvPreview.omitted}</div>
+                <div class="text-muted uppercase tracking-wider text-[10px]">Existen distintas (omitidas)</div>
+              </div>
+              <div class="bg-red-900/10 rounded-lg p-3 text-center">
+                <div class="font-barlow font-black text-lg text-red-400">{csvPreview.errors.length}</div>
+                <div class="text-muted uppercase tracking-wider text-[10px]">Errores</div>
+              </div>
+            </div>
+
+            {csvPreview.previewInsert.length > 0 && (
+              <div>
+                <p class="font-barlow font-bold uppercase text-xs text-green-accent mb-2">
+                  Se importarán ({csvPreview.previewInsert.length}{csvPreview.toInsert > csvPreview.previewInsert.length ? "+" : ""})
+                </p>
+                <div class="max-h-48 overflow-y-auto space-y-1">
+                  {csvPreview.previewInsert.map((p, i) => (
+                    <div key={i} class="flex items-center justify-between py-1 px-2 bg-green-accent/5 rounded">
+                      <span class="text-white">@{p.username}</span>
+                      <span class="text-muted">{p.home} vs {p.away}</span>
+                      <span class="text-accent-light font-semibold">{p.predHome} - {p.predAway}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {csvPreview.previewError.length > 0 && (
+              <div>
+                <p class="font-barlow font-bold uppercase text-xs text-red-400 mb-2">
+                  Errores (no se importarán)
+                </p>
+                <div class="max-h-48 overflow-y-auto space-y-1">
+                  {csvPreview.previewError.map((e, i) => (
+                    <div key={i} class="py-1 px-2 bg-red-500/5 rounded text-red-400">
+                      Línea {e.line}: {e.reason}
+                    </div>
+                  ))}
+                </div>
+                {csvPreview.errors.length > csvPreview.previewError.length && (
+                  <p class="text-muted mt-1">... y {csvPreview.errors.length - csvPreview.previewError.length} más.</p>
+                )}
+              </div>
+            )}
+          </div>
+        )}
+      </div>
 
       {/* Admin info */}
       {user && (
