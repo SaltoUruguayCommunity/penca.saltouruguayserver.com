@@ -19,6 +19,7 @@ import {
   mapStage,
   mapStatus,
 } from "../utils/pencas/api-football-data";
+import { fetchLiveFeed, fetchFifaCalendarMatches, matchFifaIdByTeamsAndDate, searchFifaMatches, debugFifaMatching, getHomeAbbr, getAwayAbbr } from "../utils/pencas/api-fifa";
 
 const STAGES = [
   "group",
@@ -221,6 +222,7 @@ export const pencas = {
           homeTeam: match.homeTeam,
           awayTeam: match.awayTeam,
           group: match.group,
+          fifaMatchId: match.fifaMatchId,
         },
         predictions,
       };
@@ -268,6 +270,35 @@ export const pencas = {
           awayTeam: { columns: { id: true, name: true, flag: true } },
         },
       });
+    },
+  }),
+
+  getLiveFeed: defineAction({
+    input: z.object({
+      matchId: z.number(),
+    }),
+    handler: async ({ matchId }) => {
+      const match = await client.query.WcMatchesTable.findFirst({
+        where: eq(WcMatchesTable.id, matchId),
+        columns: { fifaMatchId: true },
+      });
+
+      if (!match?.fifaMatchId) {
+        throw new ActionError({
+          code: "NOT_FOUND",
+          message: "Este partido no tiene ID de FIFA configurado",
+        });
+      }
+
+      try {
+        return await fetchLiveFeed(match.fifaMatchId);
+      } catch (err) {
+        const message = err instanceof Error ? err.message : "Error desconocido";
+        throw new ActionError({
+          code: "BAD_GATEWAY",
+          message: `Error al obtener datos en vivo: ${message}`,
+        });
+      }
     },
   }),
 
@@ -509,20 +540,18 @@ export const pencas = {
         const allTeams = await client.select().from(WcTeamsTable).all();
         const teamMap = new Map(allTeams.map((t) => [t.fifaCode, t.id]));
 
-        // 2. Count and delete all matches with groupId IS NULL (knockout matches)
-        const orphaned = await client
-          .select({ count: sql<number>`COUNT(*)` })
+        // 2. Count knockout matches (no delete — preserves predictions)
+        const existingKnockout = await client
+          .select()
           .from(WcMatchesTable)
           .where(sql`${WcMatchesTable.groupId} IS NULL`)
-          .get();
-        const deletedCount = orphaned?.count ?? 0;
+          .all();
 
-        await client
-          .delete(WcMatchesTable)
-          .where(sql`${WcMatchesTable.groupId} IS NULL`)
-          .run();
+        const existingSet = new Set(
+          existingKnockout.map((m) => `${m.homeTeamId}_${m.awayTeamId}_${m.stage}`),
+        );
 
-        // 3. Fetch ALL matches from API (no stage filter — API filter is unreliable)
+        // 3. Fetch ALL matches from API
         const allMatches = await fetchCompetitionMatches("WC");
 
         const KNOCKOUT_STAGES = new Set([
@@ -547,38 +576,29 @@ export const pencas = {
           const awayTeamId = teamMap.get(match.awayTeam.tla);
           if (!homeTeamId || !awayTeamId) continue;
 
-          const existing = await client
-            .select()
-            .from(WcMatchesTable)
-            .where(
-              and(
-                eq(WcMatchesTable.homeTeamId, homeTeamId),
-                eq(WcMatchesTable.awayTeamId, awayTeamId),
-                eq(WcMatchesTable.stage, mapStage(match.stage)),
-              ),
-            )
-            .get();
+          const stage = mapStage(match.stage);
+          const key = `${homeTeamId}_${awayTeamId}_${stage}`;
 
-          if (!existing) {
-            await client
-              .insert(WcMatchesTable)
-              .values({
-                groupId: null,
-                homeTeamId,
-                awayTeamId,
-                matchDate: match.utcDate,
-                stage: mapStage(match.stage),
-                status: mapStatus(match.status),
-                homeScore: match.score.fullTime.home,
-                awayScore: match.score.fullTime.away,
-              })
-              .run();
-            imported++;
-            importedStages.add(mapStage(match.stage));
-          }
+          if (existingSet.has(key)) continue;
+
+          await client
+            .insert(WcMatchesTable)
+            .values({
+              groupId: null,
+              homeTeamId,
+              awayTeamId,
+              matchDate: match.utcDate,
+              stage,
+              status: mapStatus(match.status),
+              homeScore: match.score.fullTime.home,
+              awayScore: match.score.fullTime.away,
+            })
+            .run();
+          imported++;
+          importedStages.add(stage);
         }
 
-        return { deleted: deletedCount, imported, stages: [...importedStages] };
+        return { existing: existingKnockout.length, imported, stages: [...importedStages] };
       },
     }),
 
@@ -593,6 +613,136 @@ export const pencas = {
 
         return {
           lastSyncedAt: metadata?.lastSyncedAt || null,
+        };
+      },
+    }),
+
+    setFifaMatchId: defineAction({
+      input: z.object({
+        matchId: z.number(),
+        fifaMatchId: z.string().nullable(),
+      }),
+      handler: async ({ matchId, fifaMatchId }, { request, locals }) => {
+        await requireAdmin(locals);
+
+        await client
+          .update(WcMatchesTable)
+          .set({
+            fifaMatchId: fifaMatchId || null,
+            updatedAt: sql`(current_timestamp)`,
+          })
+          .where(eq(WcMatchesTable.id, matchId))
+          .run();
+
+        return { success: true };
+      },
+    }),
+
+    searchFifaMatch: defineAction({
+      input: z.object({
+        matchId: z.number(),
+      }),
+      handler: async ({ matchId }, { request, locals }) => {
+        await requireAdmin(locals);
+
+        const match = await client.query.WcMatchesTable.findFirst({
+          where: eq(WcMatchesTable.id, matchId),
+          with: {
+            homeTeam: { columns: { fifaCode: true, name: true } },
+            awayTeam: { columns: { fifaCode: true, name: true } },
+          },
+        });
+
+        if (!match) {
+          throw new ActionError({ code: "NOT_FOUND", message: "Partido no encontrado" });
+        }
+
+        const fifaMatches = await fetchFifaCalendarMatches();
+        const results = searchFifaMatches(
+          fifaMatches,
+          match.homeTeam.fifaCode ?? "",
+          match.awayTeam.fifaCode ?? "",
+        );
+
+        return results.map((m) => ({
+          idMatch: m.IdMatch,
+          date: m.Date,
+          homeAbbr: m.HomeTeam?.Abbreviation ?? m.Home?.Abbreviation,
+          homeName: m.HomeTeam?.TeamName?.[0]?.Description ?? m.Home?.TeamName?.[0]?.Description,
+          awayAbbr: m.AwayTeam?.Abbreviation ?? m.Away?.Abbreviation,
+          awayName: m.AwayTeam?.TeamName?.[0]?.Description ?? m.Away?.TeamName?.[0]?.Description,
+          stage: m.StageName?.[0]?.Description,
+        }));
+      },
+    }),
+
+    syncFifaMatchIds: defineAction({
+      handler: async (_, { request, locals }) => {
+        await requireAdmin(locals);
+
+        console.log("[fifa-sync] Starting sync...");
+        const fifaMatches = await fetchFifaCalendarMatches();
+        console.log(`[fifa-sync] FIFA returned ${fifaMatches.length} WC2026 matches`);
+
+        if (fifaMatches.length > 0) {
+          const sample = fifaMatches[0];
+          console.log(`[fifa-sync] Sample FIFA match: ${getHomeAbbr(sample)} vs ${getAwayAbbr(sample)} on ${sample.Date} (id=${sample.IdMatch})`);
+        }
+
+        const allTeams = await client.select().from(WcTeamsTable).all();
+        const teamAbbrMap = new Map(allTeams.map((t) => [t.id, t.fifaCode?.toUpperCase()]));
+        console.log(`[fifa-sync] DB teams: ${allTeams.map((t) => `${t.id}:${t.fifaCode}`).join(', ')}`);
+
+        const matchesWithoutFifaId = await client
+          .select()
+          .from(WcMatchesTable)
+          .where(sql`${WcMatchesTable.fifaMatchId} IS NULL`)
+          .all();
+
+        console.log(`[fifa-sync] Matches without FIFA ID: ${matchesWithoutFifaId.length}`);
+
+        const debugDbMatches = matchesWithoutFifaId.slice(0, 3).map((m) => ({
+          id: m.id,
+          homeAbbr: teamAbbrMap.get(m.homeTeamId) ?? "?",
+          awayAbbr: teamAbbrMap.get(m.awayTeamId) ?? "?",
+          matchDate: m.matchDate,
+        }));
+        debugFifaMatching(fifaMatches, debugDbMatches);
+
+        let matched = 0;
+        const updates: { id: number; fifaMatchId: string }[] = [];
+
+        for (const match of matchesWithoutFifaId) {
+          const homeAbbr = teamAbbrMap.get(match.homeTeamId);
+          const awayAbbr = teamAbbrMap.get(match.awayTeamId);
+          if (!homeAbbr || !awayAbbr) {
+            console.log(`[fifa-sync] SKIP match ${match.id}: team abbr not found (home=${match.homeTeamId}, away=${match.awayTeamId})`);
+            continue;
+          }
+
+          const fifaId = matchFifaIdByTeamsAndDate(fifaMatches, homeAbbr, awayAbbr, match.matchDate);
+          if (fifaId) {
+            updates.push({ id: match.id, fifaMatchId: fifaId });
+          }
+        }
+
+        for (const update of updates) {
+          await client
+            .update(WcMatchesTable)
+            .set({
+              fifaMatchId: update.fifaMatchId,
+              updatedAt: sql`(current_timestamp)`,
+            })
+            .where(eq(WcMatchesTable.id, update.id))
+            .run();
+          matched++;
+        }
+
+        console.log(`[fifa-sync] Done. Matched: ${matched}/${matchesWithoutFifaId.length}`);
+        return {
+          totalChecked: matchesWithoutFifaId.length,
+          matched,
+          total: allTeams.length,
         };
       },
     }),

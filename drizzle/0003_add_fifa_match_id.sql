@@ -1,0 +1,1 @@
+ALTER TABLE `wc_matches` ADD COLUMN `fifa_match_id` text;

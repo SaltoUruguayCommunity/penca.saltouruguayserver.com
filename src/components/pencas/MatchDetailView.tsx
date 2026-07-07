@@ -4,6 +4,7 @@ import { actions } from "astro:actions";
 import type { Session } from "@auth/core/types";
 import { Trophy, Users, BarChart3 } from "lucide-preact";
 import confetti from "canvas-confetti";
+import LiveFeed from "./LiveFeed.tsx";
 
 type Match = {
   id: number;
@@ -15,6 +16,7 @@ type Match = {
   homeTeam: { id: number; name: string; flag: string | null };
   awayTeam: { id: number; name: string; flag: string | null };
   group: { id: number; name: string } | null;
+  fifaMatchId?: string | null;
 };
 
 type Prediction = {
@@ -185,6 +187,10 @@ export default function MatchDetailView({ match, predictions: initialPredictions
           <span class="text-lg">⚫</span>
           <p class="text-sm font-semibold text-muted">Partido finalizado</p>
         </div>
+      )}
+
+      {isLive && match.fifaMatchId && (
+        <LiveFeed matchId={match.id} />
       )}
 
       {canPredict && (

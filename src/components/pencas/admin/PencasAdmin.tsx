@@ -1,6 +1,6 @@
 import { useEffect, useState } from "preact/hooks";
 import { actions } from "astro:actions";
-import { RefreshCw, Trophy, Save, Calculator, CloudDownload, RotateCcw, Bug } from "lucide-preact";
+import { RefreshCw, Trophy, Save, Calculator, CloudDownload, RotateCcw, Bug, Link, Wand2 } from "lucide-preact";
 import { format, parseISO } from "date-fns";
 import { es } from "date-fns/locale";
 import type { Session } from "@auth/core/types";
@@ -14,6 +14,7 @@ type Match = {
   awayScore: number | null;
   homeTeam: { name: string; flag: string | null };
   awayTeam: { name: string; flag: string | null };
+  fifaMatchId?: string | null;
 };
 
 type Props = {
@@ -32,6 +33,19 @@ export default function PencasAdmin({ user }: Props) {
   const [diagnosis, setDiagnosis] = useState<{ groups: Record<string, { total: number; withGroupId: number }>; totalMatches: number; orphaned: number } | null>(null);
   const [lastSyncedAt, setLastSyncedAt] = useState<string | null>(null);
   const [reimporting, setReimporting] = useState(false);
+  const [editingFifaId, setEditingFifaId] = useState<number | null>(null);
+  const [fifaIdValue, setFifaIdValue] = useState<string>("");
+  const [syncingFifaIds, setSyncingFifaIds] = useState(false);
+  const [searchingMatchId, setSearchingMatchId] = useState<number | null>(null);
+  const [fifaSearchResults, setFifaSearchResults] = useState<Array<{
+    idMatch: string;
+    date: string;
+    homeAbbr: string;
+    homeName: string;
+    awayAbbr: string;
+    awayName: string;
+    stage: string;
+  }> | null>(null);
 
   async function loadMatches() {
     setLoadingMatches(true);
@@ -85,7 +99,7 @@ export default function PencasAdmin({ user }: Props) {
   }
 
   async function handleReimportKnockout() {
-    if (!window.confirm("¿Re-importar partidos de eliminatorias?\n\nSe eliminarán todos los partidos sin grupo y se volverán a crear desde la API.")) return;
+    if (!window.confirm("¿Re-importar partidos de eliminatorias?\n\nSe agregarán los partidos que falten sin borrar existentes ni predicciones.")) return;
 
     setReimporting(true);
     setMessage(null);
@@ -94,7 +108,7 @@ export default function PencasAdmin({ user }: Props) {
     if (res.error) {
       setMessage({ type: "error", text: res.error.message });
     } else {
-      const data = res.data as { deleted: number; imported: number; stages: string[] };
+      const data = res.data as { existing: number; imported: number; stages: string[] };
       const stageLabels: Record<string, string> = {
         last_32: "Treintaydosavos",
         last_16: "Dieciseisavos",
@@ -107,7 +121,7 @@ export default function PencasAdmin({ user }: Props) {
       const stageNames = data.stages.map((s) => stageLabels[s] ?? s).join(", ");
       setMessage({
         type: "success",
-        text: `Eliminados ${data.deleted}, importados ${data.imported} partidos${stageNames ? ` (${stageNames})` : ""}`,
+        text: `Eliminatorias: ${data.existing} existentes, ${data.imported} nuevos${stageNames ? ` (${stageNames})` : ""}`,
       });
       await loadMatches();
     }
@@ -174,6 +188,63 @@ export default function PencasAdmin({ user }: Props) {
     }
   }
 
+  async function handleSaveFifaId(matchId: number) {
+    setEditingFifaId(matchId);
+    setMessage(null);
+    const res = await actions.pencas.admin.setFifaMatchId({
+      matchId,
+      fifaMatchId: fifaIdValue.trim() || null,
+    });
+    setEditingFifaId(null);
+    if (res.error) {
+      setMessage({ type: "error", text: res.error.message });
+    } else {
+      setMessage({ type: "success", text: "FIFA Match ID actualizado" });
+      await loadMatches();
+    }
+  }
+
+  async function handleSyncFifaIds() {
+    setSyncingFifaIds(true);
+    setMessage(null);
+    const res = await actions.pencas.admin.syncFifaMatchIds();
+    setSyncingFifaIds(false);
+    if (res.error) {
+      setMessage({ type: "error", text: res.error.message });
+    } else {
+      const data = res.data as { totalChecked: number; matched: number };
+      setMessage({
+        type: "success",
+        text: `FIFA IDs sincronizados: ${data.matched} de ${data.totalChecked} partidos sin ID encontrados`,
+      });
+      await loadMatches();
+    }
+  }
+
+  async function handleSearchFifa(matchId: number) {
+    setSearchingMatchId(matchId);
+    setFifaSearchResults(null);
+    const res = await actions.pencas.admin.searchFifaMatch({ matchId });
+    setSearchingMatchId(null);
+    if (res.error) {
+      setMessage({ type: "error", text: res.error.message });
+    } else {
+      setFifaSearchResults(res.data as typeof fifaSearchResults);
+    }
+  }
+
+  async function handleSelectFifaMatch(matchId: number, fifaMatchId: string) {
+    setMessage(null);
+    const res = await actions.pencas.admin.setFifaMatchId({ matchId, fifaMatchId });
+    if (res.error) {
+      setMessage({ type: "error", text: res.error.message });
+    } else {
+      setMessage({ type: "success", text: `FIFA ID ${fifaMatchId} asignado` });
+      setFifaSearchResults(null);
+      await loadMatches();
+    }
+  }
+
   function updateScore(matchId: number, field: "homeScore" | "awayScore", value: number) {
     setMatches((prev) =>
       prev.map((m) => (m.id === matchId ? { ...m, [field]: value } : m)),
@@ -231,6 +302,14 @@ export default function PencasAdmin({ user }: Props) {
             >
               <RefreshCw class={`h-4 w-4 ${fetching ? "animate-spin" : ""}`} />
               {fetching ? "Importando..." : "Importar datos"}
+            </button>
+            <button
+              onClick={handleSyncFifaIds}
+              disabled={syncingFifaIds}
+              class="btn-secondary !py-2.5 !px-4 !text-xs"
+            >
+              <Wand2 class={`h-4 w-4 ${syncingFifaIds ? "animate-spin" : ""}`} />
+              {syncingFifaIds ? "Buscando..." : "Auto-detectar FIFA IDs"}
             </button>
           </div>
         </div>
@@ -313,20 +392,21 @@ export default function PencasAdmin({ user }: Props) {
                 <th class="px-5 py-4 text-center font-semibold">Score</th>
                 <th class="px-5 py-4 text-left font-semibold">Visitante</th>
                 <th class="px-5 py-4 text-center font-semibold">Estado</th>
+                <th class="px-5 py-4 text-center font-semibold">FIFA ID</th>
                 <th class="px-5 py-4 text-center font-semibold">Acciones</th>
               </tr>
             </thead>
             <tbody class="divide-y divide-accent-border/10">
               {loadingMatches ? (
                 <tr>
-                  <td colspan={6} class="text-center py-12 text-muted text-sm">
+                  <td colspan={7} class="text-center py-12 text-muted text-sm">
                     <RefreshCw class="h-5 w-5 animate-spin mx-auto mb-2 text-accent" />
                     Cargando partidos...
                   </td>
                 </tr>
               ) : matches.length === 0 ? (
                 <tr>
-                  <td colspan={6} class="text-center py-12 text-muted text-sm">
+                  <td colspan={7} class="text-center py-12 text-muted text-sm">
                     No hay partidos. Importá desde la API primero.
                   </td>
                 </tr>
@@ -370,6 +450,57 @@ export default function PencasAdmin({ user }: Props) {
                         }`}>
                         {match.status === "finished" ? "Finalizado" : match.status === "live" ? "En vivo" : "Programado"}
                       </span>
+                    </td>
+                    <td class="px-5 py-4">
+                      {editingFifaId === match.id ? (
+                        <div class="flex items-center gap-1.5">
+                          <input
+                            type="text"
+                            value={fifaIdValue}
+                            onInput={(e) => setFifaIdValue((e.target as HTMLInputElement).value)}
+                            placeholder="400021528"
+                            class="w-28 px-2 py-1 text-xs bg-black/30 border border-accent-border/40 rounded text-white font-mono focus:border-accent focus:outline-none"
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter") handleSaveFifaId(match.id);
+                              if (e.key === "Escape") setEditingFifaId(null);
+                            }}
+                          />
+                          <button
+                            onClick={() => handleSaveFifaId(match.id)}
+                            class="text-green-accent hover:text-green-accent/80 transition"
+                          >
+                            <Save class="h-3.5 w-3.5" />
+                          </button>
+                        </div>
+                      ) : (
+                        <div class="flex items-center gap-1.5">
+                          <button
+                            onClick={() => {
+                              setEditingFifaId(match.id);
+                              setFifaIdValue(match.fifaMatchId ?? "");
+                            }}
+                            class={`inline-flex items-center gap-1 text-xs font-mono px-2 py-1 rounded transition ${
+                              match.fifaMatchId
+                                ? "bg-green-accent/10 text-green-accent hover:bg-green-accent/20"
+                                : "bg-zinc-800 text-muted hover:bg-zinc-700 hover:text-white"
+                            }`}
+                            title={match.fifaMatchId ? `FIFA ID: ${match.fifaMatchId}` : "Click para configurar FIFA ID"}
+                          >
+                            <Link class="h-3 w-3" />
+                            {match.fifaMatchId || "—"}
+                          </button>
+                          {!match.fifaMatchId && (
+                            <button
+                              onClick={() => handleSearchFifa(match.id)}
+                              disabled={searchingMatchId === match.id}
+                              class="text-muted hover:text-accent-light transition"
+                              title="Buscar en FIFA"
+                            >
+                              <Wand2 class={`h-3.5 w-3.5 ${searchingMatchId === match.id ? "animate-spin" : ""}`} />
+                            </button>
+                          )}
+                        </div>
+                      )}
                     </td>
                     <td class="px-5 py-4 text-center">
                       <div class="flex items-center justify-center gap-2">

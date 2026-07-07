@@ -178,68 +178,71 @@ export async function autoImportNextStage(): Promise<{
 
     console.log(`[sync] autoImportNextStage: ${current} → total: ${total?.count}, finished: ${finished?.count}`);
 
-    if (total && finished && total.count === finished.count) {
-      console.log(`[sync] autoImportNextStage: ${current} stage complete, importing ${next}...`);
+    if (!total || !finished || total.count === 0) continue;
+    if (total.count !== finished.count) continue;
 
-      const apiStage = STAGE_TO_API[next];
-      if (!apiStage) continue;
+    console.log(`[sync] autoImportNextStage: ${current} stage complete, importing ${next}...`);
 
-      // Fetch ALL matches from API (no stage filter — API filter is unreliable)
-      const allMatches = await fetchCompetitionMatches("WC");
-      const nextStageMatches = allMatches.matches.filter(
-        (m) => mapStage(m.stage) === next
-      );
+    const allMatches = await fetchCompetitionMatches("WC");
 
-      console.log(`[sync] autoImportNextStage: API returned ${allMatches.matches.length} total, ${nextStageMatches.length} for ${next}`);
+    const nextStageMatches = allMatches.matches.filter(
+      (m) => mapStage(m.stage) === next
+    );
 
-      const allTeams = await client.select().from(WcTeamsTable).all();
-      const teamMap = new Map(allTeams.map((t) => [t.fifaCode, t.id]));
+    console.log(`[sync] autoImportNextStage: API returned ${allMatches.matches.length} total, ${nextStageMatches.length} for ${next}`);
 
-      let imported = 0;
+    if (nextStageMatches.length === 0) {
+      console.log(`[sync] autoImportNextStage: no ${next} matches available in API yet, will retry next sync`);
+      return { imported: 0, stage: null };
+    }
 
-      for (const match of nextStageMatches) {
-        const homeTeamId = teamMap.get(match.homeTeam.tla);
-        const awayTeamId = teamMap.get(match.awayTeam.tla);
+    const allTeams = await client.select().from(WcTeamsTable).all();
+    const teamMap = new Map(allTeams.map((t) => [t.fifaCode, t.id]));
 
-        if (!homeTeamId || !awayTeamId) {
-          console.log(`[sync] autoImportNextStage: SKIP team not found: ${match.homeTeam.tla} vs ${match.awayTeam.tla}`);
-          continue;
-        }
+    let imported = 0;
 
-        const existing = await client
-          .select()
-          .from(WcMatchesTable)
-          .where(
-            and(
-              eq(WcMatchesTable.homeTeamId, homeTeamId),
-              eq(WcMatchesTable.awayTeamId, awayTeamId),
-              eq(WcMatchesTable.stage, mapStage(match.stage)),
-            ),
-          )
-          .get();
+    for (const match of nextStageMatches) {
+      const homeTeamId = teamMap.get(match.homeTeam.tla);
+      const awayTeamId = teamMap.get(match.awayTeam.tla);
 
-        if (!existing) {
-          await client
-            .insert(WcMatchesTable)
-            .values({
-              groupId: null,
-              homeTeamId,
-              awayTeamId,
-              matchDate: match.utcDate,
-              stage: mapStage(match.stage),
-              status: mapStatus(match.status),
-              homeScore: match.score.fullTime.home,
-              awayScore: match.score.fullTime.away,
-            })
-            .run();
-          imported++;
-          console.log(`[sync] autoImportNextStage: INSERTED ${match.homeTeam.tla} vs ${match.awayTeam.tla} (${mapStage(match.stage)})`);
-        }
+      if (!homeTeamId || !awayTeamId) {
+        console.log(`[sync] autoImportNextStage: SKIP team not found: ${match.homeTeam.tla} vs ${match.awayTeam.tla}`);
+        continue;
       }
 
-      console.log(`[sync] autoImportNextStage: done — imported ${imported} ${next} matches`);
-      return { imported, stage: next };
+      const existing = await client
+        .select()
+        .from(WcMatchesTable)
+        .where(
+          and(
+            eq(WcMatchesTable.homeTeamId, homeTeamId),
+            eq(WcMatchesTable.awayTeamId, awayTeamId),
+            eq(WcMatchesTable.stage, mapStage(match.stage)),
+          ),
+        )
+        .get();
+
+      if (!existing) {
+        await client
+          .insert(WcMatchesTable)
+          .values({
+            groupId: null,
+            homeTeamId,
+            awayTeamId,
+            matchDate: match.utcDate,
+            stage: mapStage(match.stage),
+            status: mapStatus(match.status),
+            homeScore: match.score.fullTime.home,
+            awayScore: match.score.fullTime.away,
+          })
+          .run();
+        imported++;
+        console.log(`[sync] autoImportNextStage: INSERTED ${match.homeTeam.tla} vs ${match.awayTeam.tla} (${mapStage(match.stage)})`);
+      }
     }
+
+    console.log(`[sync] autoImportNextStage: done — imported ${imported} ${next} matches`);
+    return { imported, stage: next };
   }
 
   return { imported: 0, stage: null };

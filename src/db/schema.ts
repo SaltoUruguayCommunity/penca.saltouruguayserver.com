@@ -41,6 +41,7 @@ export const WcMatchesTable = sqliteTable('wc_matches', {
   status: text('status').notNull().default('scheduled'),
   homeScore: integer('home_score'),
   awayScore: integer('away_score'),
+  fifaMatchId: text('fifa_match_id'),
   createdAt: text('created_at').notNull().default(sql`(current_timestamp)`),
   updatedAt: text('updated_at').notNull().default(sql`(current_timestamp)`),
 });
