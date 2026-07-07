@@ -28,11 +28,18 @@ function parseFixedWidth(text: string): { headers: string[]; rows: string[][] } 
 
   const headerLine = lines[0];
 
-  // Find column start positions: transitions from space to non-space
-  const starts: number[] = [];
-  for (let i = 0; i < headerLine.length; i++) {
-    if (headerLine[i] !== " " && (i === 0 || headerLine[i - 1] === " ")) {
-      starts.push(i);
+  // Find column start positions: non-space char preceded by 3+ spaces (column separator)
+  const starts: number[] = [0]; // first column always starts at 0
+  for (let i = 1; i < headerLine.length; i++) {
+    if (headerLine[i] !== " " && headerLine[i - 1] === " ") {
+      // Count consecutive spaces before this position
+      let spaceCount = 0;
+      for (let j = i - 1; j >= 0 && headerLine[j] === " "; j--) {
+        spaceCount++;
+      }
+      if (spaceCount >= 3) {
+        starts.push(i);
+      }
     }
   }
 
@@ -43,7 +50,7 @@ function parseFixedWidth(text: string): { headers: string[]; rows: string[][] } 
   };
 
   const rawHeaders = starts.map((_, i) => extract(headerLine, i).toLowerCase().replace(/\s+/g, ""));
-  // Deduplicate headers: fifacode -> homeFifaCode/awayFifaCode
+  // Deduplicate headers and map to expected names
   const seen: Record<string, number> = {};
   const headers = rawHeaders.map((h) => {
     if (h === "fifacode") {
